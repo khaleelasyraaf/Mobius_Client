@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/sensorsRequestBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Acc"
+        tools:layout_editor_absoluteX="161dp"
+        tools:layout_editor_absoluteY="413dp" />
+
+    <TextView
+        android:id="@+id/AccXText"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:text="AccX" />
+
+    <TextView
+        android:id="@+id/AccYText"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:text="AccY" />
+
+    <TextView
+        android:id="@+id/AccZText"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:text="AccZ" />
+
+    <TextView
+        android:id="@+id/GyroXText"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:text="GyroX" />
+
+    <TextView
+        android:id="@+id/GyroYText"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:text="GyroY" />
+
+    <TextView
+        android:id="@+id/GyroZText"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:text="GyroZ" />
+
+</LinearLayout>
