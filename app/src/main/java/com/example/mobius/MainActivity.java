@@ -1,11 +1,8 @@
 package com.example.mobius;
 
 import android.Manifest;
-import android.app.Activity;
 
-import android.content.ContextWrapper;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
@@ -13,12 +10,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-import android.os.Vibrator;
 
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -26,26 +20,17 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.content.Context;
 
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -177,61 +162,70 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float Acc_X = v.values[0];
         float Acc_Y = v.values[1];
         float Acc_Z = v.values[2];
-
+        // TODO Aren't the values the same?! :-O
         float Gyro_X = v.values[0];
         float Gyro_Y = v.values[1];
         float Gyro_Z = v.values[2];
 
+        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
         String dateToStr = format.format(today);
+        frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
 
-        String accString =  "\n" + dateToStr + " Acc=" + "X:" + Acc_X + " Y:" + Acc_Y + " Z:" + Acc_Z + "\n";
-        String gyroString = "\n" + dateToStr + " Gyro=" + "X:" + Gyro_X + " Y:" + Gyro_Y + " Z:" + Gyro_Z + "\n";
-
-
-        FileOutputStream fos = null;
+        JSONObject myJsonObject = new JSONObject();
         try {
-            fos = openFileOutput(FILENAME1, Context.MODE_APPEND);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            fos.write(accString.getBytes());
-            fos.write(gyroString.getBytes());
-            fos.close();
-        } catch (IOException e) {
+            myJsonObject.put("frameStamp", dateToStr);
+            myJsonObject.put("frameAttributes", frameAttrs);
+        } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        FileHelper.saveToFile(dataPath,accString + gyroString, FILENAME1);
+        // What does this do?
+//        FileOutputStream fos = null;
+//        try {
+//            fos = openFileOutput(FILENAME1, Context.MODE_APPEND);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        try {
+//            fos.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        FileHelper.saveToFile(dataPath, myJsonObject.toString(), FILENAME1);
     }
 
     public void saveGPSData() {
         final double latitude = mLocation.getLatitude();
         final double longitude = mLocation.getLongitude();
 
+        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
         String dateToStr = format.format(today);
+        frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
 
-        String locationString =  "\n" + dateToStr + " Latitude:" + latitude + " Longitude:" + longitude + "\n";
-
-
-        FileOutputStream fos = null;
+        JSONObject myJsonObject = new JSONObject();
         try {
-            fos = openFileOutput(FILENAME2, Context.MODE_APPEND);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            fos.write(locationString.getBytes());
-            fos.close();
-        } catch (IOException e) {
+            myJsonObject.put("frameStamp", dateToStr);
+            myJsonObject.put("frameAttributes", frameAttrs);
+        } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        FileHelper.saveToFile(dataPath,locationString, FILENAME2);
+//        FileOutputStream fos = null;
+//        try {
+//            fos = openFileOutput(FILENAME2, Context.MODE_APPEND);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        try {
+//            fos.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        FileHelper.saveToFile(dataPath, myJsonObject.toString(), FILENAME2);
     }
 
     boolean filesZipped = false;
@@ -304,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
 
-        if (IsDataRequested == true) {
+        if (IsDataRequested) {
             String sensorName = "Unknown";
             String sensorNameShort = "UnknownShort";
             if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
