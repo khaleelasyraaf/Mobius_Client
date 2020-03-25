@@ -123,18 +123,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //endregion
 
-
         //Subscribe to handle the button click
         mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
-
 
         startGPS();
         //stopGPS();
 
         //startSensors();
         //stopSensors();
-
-
 
     }
 
@@ -145,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             final double longitude = mLocation.getLongitude();
 
             Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
+            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
             mHandler.postDelayed(this, 10000);
 
             saveGPSData();
@@ -308,37 +305,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Sensor sensor = event.sensor;
 
         if (IsDataRequested == true) {
-
+            String sensorName = "Unknown";
+            String sensorNameShort = "UnknownShort";
             if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
-                Log.d("Accelerometer", "Acc_X:" + event.values[0] + "Acc_Y:" + event.values[1] + "Acc_Z:" + event.values[2]);
-
+                sensorName = "Accelerometer";
+                sensorNameShort = "Acc";
                 AccXText.setText("AccX:" + event.values[0]);
                 AccYText.setText("AccY:" + event.values[1]);
                 AccZText.setText("AccZ:" + event.values[2]);
-
-                //Toast.makeText(MainActivity.this, "Acc_X: " + event.values[0] + ", Acc_Y: " + event.values[1] + ", Acc_Z: " + event.values[2], Toast.LENGTH_SHORT).show();
-                //startSensors();
-                saveSensorData(event);
-
             }
-        }
-
-        if (IsDataRequested == true) {
-
-            if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-
-                Log.d("Gyroscope", "Gyro_X:" + event.values[0] + "Gyro_Y:" + event.values[1] + "Gyro_Z:" + event.values[2]);
+            else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                sensorName = "Gyroscope";
+                sensorNameShort = "Gyro";
                 GyroXText.setText("GyroX:" + event.values[0]);
                 GyroYText.setText("GyroY:" + event.values[1]);
                 GyroZText.setText("GyroZ:" + event.values[2]);
-
-                //Toast.makeText(MainActivity.this, "Gyro_X: " + event.values[0] + ", Gyro_Y: " + event.values[1] + ", Gyro_Z: " + event.values[2], Toast.LENGTH_SHORT).show();
-                saveSensorData(event);
-
             }
+            Log.d(sensorName, sensorNameShort+"_X:" + event.values[0] +
+                    " "+sensorNameShort+"_Y:" + event.values[1] +
+                    " "+sensorNameShort+"_Z:" + event.values[2]);
+//            Toast.makeText(MainActivity.this, sensorNameShort+"_X: " + event.values[0] +
+//                    ", "+sensorNameShort+"_Y: " + event.values[1] +
+//                    ", "+sensorNameShort+"_Z: " + event.values[2], Toast.LENGTH_SHORT).show();
+            saveSensorData(event);
         }
-
 
     }
 
