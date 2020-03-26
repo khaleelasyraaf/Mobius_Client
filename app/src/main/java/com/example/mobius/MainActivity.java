@@ -162,7 +162,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float Acc_X = v.values[0];
         float Acc_Y = v.values[1];
         float Acc_Z = v.values[2];
-        // TODO Aren't the values the same?! :-O
         float Gyro_X = v.values[0];
         float Gyro_Y = v.values[1];
         float Gyro_Z = v.values[2];
@@ -179,19 +178,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        // What does this do?
-//        FileOutputStream fos = null;
-//        try {
-//            fos = openFileOutput(FILENAME1, Context.MODE_APPEND);
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        try {
-//            fos.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
         FileHelper.saveToFile(dataPath, myJsonObject.toString(), FILENAME1);
     }
@@ -212,18 +198,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-//        FileOutputStream fos = null;
-//        try {
-//            fos = openFileOutput(FILENAME2, Context.MODE_APPEND);
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        try {
-//            fos.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
         FileHelper.saveToFile(dataPath, myJsonObject.toString(), FILENAME2);
     }
