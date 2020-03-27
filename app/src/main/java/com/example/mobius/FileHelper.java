@@ -127,7 +127,7 @@ public class FileHelper {
     public static void saveToFile(String destinationPath, String data, String fileName){
         try {
             new File(destinationPath).mkdirs();
-            File file = new File(destinationPath+ fileName);
+            File file = new File(destinationPath+fileName);
             if (!file.exists()) {
                 file.createNewFile();
             }

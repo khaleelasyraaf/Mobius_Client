@@ -47,8 +47,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SimpleLocation mLocation;
 
-    String FILENAME1 = new Date().getTime() + "_sensors.json";
-    String FILENAME2 = new Date().getTime() + "_gps.json";
+    String FILENAME1 = new Date().getTime() + "_sensors.csv";
+    String FILENAME2 = new Date().getTime() + "_gps.csv";
 
     private String SDPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String dataPath = SDPath + "/Mobius/data/";
@@ -111,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //Subscribe to handle the button click
         mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
 
+        String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
+        String gpsNameList = "Time, Latitude, Longitude";
+        FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
+        FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
         startGPS();
         //stopGPS();
 
@@ -169,17 +173,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
-        frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
-
-        JSONObject myJsonObject = new JSONObject();
-        try {
-            myJsonObject.put("frameStamp", dateToStr);
-            myJsonObject.put("frameAttributes", frameAttrs);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        FileHelper.saveToFile(dataPath, myJsonObject.toString(), FILENAME1);
+//        frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
+//
+//        JSONObject myJsonObject = new JSONObject();
+//        try {
+//            myJsonObject.put("frameStamp", dateToStr);
+//            myJsonObject.put("frameAttributes", frameAttrs);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+        String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
+        FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
     }
 
     public void saveGPSData() {
@@ -189,17 +193,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
-        frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
+//        frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
+//
+//        JSONObject myJsonObject = new JSONObject();
+//        try {
+//            myJsonObject.put("frameStamp", dateToStr);
+//            myJsonObject.put("frameAttributes", frameAttrs);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
 
-        JSONObject myJsonObject = new JSONObject();
-        try {
-            myJsonObject.put("frameStamp", dateToStr);
-            myJsonObject.put("frameAttributes", frameAttrs);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        FileHelper.saveToFile(dataPath, myJsonObject.toString(), FILENAME2);
+        String gpsData = dateToStr+","+latitude+","+longitude;
+        FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
     }
 
     boolean filesZipped = false;
