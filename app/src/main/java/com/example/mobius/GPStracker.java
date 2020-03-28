@@ -33,6 +33,8 @@ public class GPStracker extends AppCompatActivity implements LocationListener {
 
         if (isGPSEnabled) {
             lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0, this);
+            Location l = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            return l;
         } else {
             Toast.makeText(context, "Please enable GPS", Toast.LENGTH_LONG).show();
         }
@@ -54,10 +56,7 @@ public class GPStracker extends AppCompatActivity implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        double lat = location.getLatitude();
-        double lon = location.getLongitude();
 
-        Log.d("Geo_Location", "Latitude" + lat + ", Longitude" + lon);
     }
 
     @Override
