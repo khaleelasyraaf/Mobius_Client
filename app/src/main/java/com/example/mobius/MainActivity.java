@@ -1,54 +1,42 @@
 package com.example.mobius;
 
 import android.Manifest;
-import android.app.Activity;
-
-import android.content.ContextWrapper;
+import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Location;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.*;
-import android.os.Vibrator;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.content.Context;
-
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.text.DateFormat;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import android.widget.Toast;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
 
     // UI controls
     private Button mySensorsRequestBtn;
@@ -62,13 +50,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SimpleLocation mLocation;
 
-    String FILENAME1 = new Date().getTime() + "_sensors.json";
-    String FILENAME2 = new Date().getTime() + "_gps.json";
+
+    String FILENAME1 = new Date().getTime() + "_sensors.csv";
+    String FILENAME2 = new Date().getTime() + "_gps.csv";
 
     private String SDPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String dataPath = SDPath + "/Mobius/data/";
     private String zipPath = SDPath + "/Mobius/zip/";
     private String unzipPath = SDPath + "/Mobius/unzip/";
+
 
 
     /** Called when the activity is created. */
@@ -83,6 +73,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
+
+        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 123);
+
 
         setContentView(R.layout.activity_main);
         context = this;
@@ -127,6 +120,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //Subscribe to handle the button click
         mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
 
+        String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
+        String gpsNameList = "Time, Latitude, Longitude";
+        FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
+        FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
+
 
         startGPS();
         //stopGPS();
@@ -135,8 +133,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //stopSensors();
 
 
-
     }
+
 
     private Runnable mGPSRunnable = new Runnable() {
         @Override
@@ -145,10 +143,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             final double longitude = mLocation.getLongitude();
 
             Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
+            Log.d("GPS", "Lat:" + latitude + "Long:" + longitude);
             mHandler.postDelayed(this, 10000);
 
             saveGPSData();
-            //writeFileExternalStorage();
+
         }
     };
 
@@ -185,56 +184,66 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float Gyro_Y = v.values[1];
         float Gyro_Z = v.values[2];
 
+        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
         String dateToStr = format.format(today);
-
-        String accString =  "\n" + dateToStr + " Acc=" + "X:" + Acc_X + " Y:" + Acc_Y + " Z:" + Acc_Z + "\n";
-        String gyroString = "\n" + dateToStr + " Gyro=" + "X:" + Gyro_X + " Y:" + Gyro_Y + " Z:" + Gyro_Z + "\n";
-
-
-        FileOutputStream fos = null;
-        try {
-            fos = openFileOutput(FILENAME1, Context.MODE_APPEND);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            fos.write(accString.getBytes());
-            fos.write(gyroString.getBytes());
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        FileHelper.saveToFile(dataPath,accString + gyroString, FILENAME1);
+//      frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
+//
+//        JSONObject myJsonObject = new JSONObject();
+//        try {
+//            myJsonObject.put("frameStamp", dateToStr);
+//            myJsonObject.put("frameAttributes", frameAttrs);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+        String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
+        FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
     }
 
     public void saveGPSData() {
         final double latitude = mLocation.getLatitude();
         final double longitude = mLocation.getLongitude();
 
+        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
         String dateToStr = format.format(today);
+//      frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
+//
+//        JSONObject myJsonObject = new JSONObject();
+//        try {
+//            myJsonObject.put("frameStamp", dateToStr);
+//            myJsonObject.put("frameAttributes", frameAttrs);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
 
-        String locationString =  "\n" + dateToStr + " Latitude:" + latitude + " Longitude:" + longitude + "\n";
+        String gpsData = dateToStr+","+latitude+","+longitude;
+        FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
+    }
 
-
-        FileOutputStream fos = null;
+    public void sendZipServer() {
+        Socket socket;
         try {
-            fos = openFileOutput(FILENAME2, Context.MODE_APPEND);
-        } catch (FileNotFoundException e) {
+            socket = new Socket("tcp://127.0.0.1", 5000);
+
+            File myFile = new File (zipPath);
+            byte [] myByteArray  = new byte [(int)myFile.length()];
+            FileInputStream fis = new FileInputStream(myFile);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            bis.read(myByteArray,0,myByteArray.length);
+            OutputStream os = socket.getOutputStream();
+
+            os.write(myByteArray,0,myByteArray.length);
+            os.flush();
+
+            socket.close();
+
+        } catch (UnknownHostException e) {
             e.printStackTrace();
-        }
-        try {
-            fos.write(locationString.getBytes());
-            fos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        FileHelper.saveToFile(dataPath,locationString, FILENAME2);
     }
 
     boolean filesZipped = false;
@@ -244,56 +253,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         if (FileHelper.zip(dataPath, zipPath, new Date().getTime() + ".zip", filesZipped)){
             Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
+
+            //sendZipServer();
         }
     }
-
-    /*public void writeGPSFileExternalStorage() {
-
-        String state = Environment.getExternalStorageState();
-
-        final double latitude = mLocation.getLatitude();
-        final double longitude = mLocation.getLongitude();
-
-        Date today = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
-        String dateToStr = format.format(today);
-
-        String locationString =  "\n" + dateToStr + " Latitude:" + latitude + " Longitude:" + longitude + "\n";
-
-        String APP_PATH_SD_CARD = "/Mobius";
-
-        String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + APP_PATH_SD_CARD;
-
-        try {
-            File dir = new File(fullPath);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-        }
-        catch(Exception e){
-        }
-
-        if (!Environment.MEDIA_MOUNTED.equals(state)) {
-            return;
-        }
-        File file = new File(Environment.getExternalStorageDirectory(), FILENAME2);
-
-
-        FileOutputStream outputStream;
-        try {
-            file.createNewFile();
-            //second argument of FileOutputStream constructor indicates whether to append or create new file if one exists
-            outputStream = new FileOutputStream(file, true);
-
-            outputStream.write(locationString.getBytes());
-            outputStream.flush();
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }*/
-
 
 
     @Override
@@ -307,41 +270,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
 
-        if (IsDataRequested == true) {
+        if (IsDataRequested) {
+            String sensorName = "Unknown";
+            String sensorNameShort = "UnknownShort";
 
             if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
-                Log.d("Accelerometer", "Acc_X:" + event.values[0] + "Acc_Y:" + event.values[1] + "Acc_Z:" + event.values[2]);
+                sensorName = "Accelerometer";
+                sensorNameShort = "Acc";
 
                 AccXText.setText("AccX:" + event.values[0]);
                 AccYText.setText("AccY:" + event.values[1]);
                 AccZText.setText("AccZ:" + event.values[2]);
 
-                //Toast.makeText(MainActivity.this, "Acc_X: " + event.values[0] + ", Acc_Y: " + event.values[1] + ", Acc_Z: " + event.values[2], Toast.LENGTH_SHORT).show();
-                //startSensors();
-                saveSensorData(event);
-
             }
-        }
+            else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                sensorName = "Gyroscope";
+                sensorNameShort = "Gyro";
 
-        if (IsDataRequested == true) {
-
-            if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-
-                Log.d("Gyroscope", "Gyro_X:" + event.values[0] + "Gyro_Y:" + event.values[1] + "Gyro_Z:" + event.values[2]);
                 GyroXText.setText("GyroX:" + event.values[0]);
                 GyroYText.setText("GyroY:" + event.values[1]);
                 GyroZText.setText("GyroZ:" + event.values[2]);
 
-                //Toast.makeText(MainActivity.this, "Gyro_X: " + event.values[0] + ", Gyro_Y: " + event.values[1] + ", Gyro_Z: " + event.values[2], Toast.LENGTH_SHORT).show();
-                saveSensorData(event);
-
             }
+            Log.d(sensorName, sensorNameShort+"_X:" + event.values[0] +
+                    " "+sensorNameShort+"_Y:" + event.values[1] +
+                    " "+sensorNameShort+"_Z:" + event.values[2]);
+//            Toast.makeText(MainActivity.this, sensorNameShort+"_X: " + event.values[0] +
+//                    ", "+sensorNameShort+"_Y: " + event.values[1] +
+//                    ", "+sensorNameShort+"_Z: " + event.values[2], Toast.LENGTH_SHORT).show();
+            saveSensorData(event);
         }
 
-
     }
-
 
 
     // Button that sends the sensor data when clicked
@@ -351,16 +311,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 IsDataRequested = !IsDataRequested;
                 Log.d("Sensors", "Sensors Button Pressed");
-
-
-
-                //GPStracker g = new GPStracker(getApplicationContext());
-                //Location l = g.getLocation();
-
-
-                //createJSON obj = new createJSON();
-                //JSONObject jsonObject = obj.makeJSONObject();
-
 
 
         }
