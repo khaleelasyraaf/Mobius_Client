@@ -19,7 +19,7 @@ public class FileHelper {
     private static String parentPath ="";
 
 
-    public static boolean zip( String sourcePath, String destinationPath, String destinationFileName, Boolean includeParentFolder)  {
+    public static boolean zip(String sourcePath, String destinationPath, String destinationFileName, Boolean includeParentFolder)  {
         new File(destinationPath ).mkdirs();
         FileOutputStream fileOutputStream ;
         ZipOutputStream zipOutputStream =  null;
