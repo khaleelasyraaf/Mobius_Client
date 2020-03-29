@@ -51,9 +51,7 @@ public class FileHelper {
 
                 }
         }
-
         return true;
-
     }
 
     private static void zipFile(ZipOutputStream zipOutputStream, String sourcePath) throws  IOException{
@@ -82,8 +80,6 @@ public class FileHelper {
                 input.close();
             }
         }
-
-
 
     }
 
@@ -128,8 +124,7 @@ public class FileHelper {
     }
 
 
-
-    public static  void saveToFile(String destinationPath, String data, String fileName){
+    public static void saveToFile(String destinationPath, String data, String fileName){
         try {
             new File(destinationPath).mkdirs();
             File file = new File(destinationPath+fileName);

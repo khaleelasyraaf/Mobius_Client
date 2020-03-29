@@ -16,9 +16,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
+
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.content.Context;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +39,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -116,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //endregion
 
-
         //Subscribe to handle the button click
         mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
 
@@ -125,13 +130,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
         FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
 
-
         startGPS();
         //stopGPS();
 
         //startSensors();
         //stopSensors();
-
 
     }
 
@@ -143,7 +146,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             final double longitude = mLocation.getLongitude();
 
             Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
-            Log.d("GPS", "Lat:" + latitude + "Long:" + longitude);
+            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
+
             mHandler.postDelayed(this, 10000);
 
             saveGPSData();
@@ -179,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float Acc_X = v.values[0];
         float Acc_Y = v.values[1];
         float Acc_Z = v.values[2];
-
         float Gyro_X = v.values[0];
         float Gyro_Y = v.values[1];
         float Gyro_Z = v.values[2];
@@ -187,7 +190,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
+
 //      frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
+
 //
 //        JSONObject myJsonObject = new JSONObject();
 //        try {
@@ -207,7 +212,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
+
 //      frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
+
 //
 //        JSONObject myJsonObject = new JSONObject();
 //        try {
@@ -273,11 +280,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (IsDataRequested) {
             String sensorName = "Unknown";
             String sensorNameShort = "UnknownShort";
-
             if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 sensorName = "Accelerometer";
                 sensorNameShort = "Acc";
-
                 AccXText.setText("AccX:" + event.values[0]);
                 AccYText.setText("AccY:" + event.values[1]);
                 AccZText.setText("AccZ:" + event.values[2]);
@@ -286,7 +291,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 sensorName = "Gyroscope";
                 sensorNameShort = "Gyro";
-
                 GyroXText.setText("GyroX:" + event.values[0]);
                 GyroYText.setText("GyroY:" + event.values[1]);
                 GyroZText.setText("GyroZ:" + event.values[2]);
