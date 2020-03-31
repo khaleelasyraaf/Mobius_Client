@@ -20,6 +20,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.internal.gmsg.HttpClient;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -181,15 +183,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
-//      frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
-//
-//        JSONObject myJsonObject = new JSONObject();
-//        try {
-//            myJsonObject.put("frameStamp", dateToStr);
-//            myJsonObject.put("frameAttributes", frameAttrs);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
+
         String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
         FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
     }
@@ -201,15 +195,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
-//      frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
-//
-//        JSONObject myJsonObject = new JSONObject();
-//        try {
-//            myJsonObject.put("frameStamp", dateToStr);
-//            myJsonObject.put("frameAttributes", frameAttrs);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
 
         String gpsData = dateToStr+","+latitude+","+longitude;
         FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
@@ -222,8 +207,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         String zipName = new Date().getTime() + ".zip";
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
-
+            Log.d("SendtoServer", "Trying to send file to server");
             new FileSender().execute(zipPath, zipName);
+            Log.d("SendtoServer", "Tried sending");
 
         }
     }
