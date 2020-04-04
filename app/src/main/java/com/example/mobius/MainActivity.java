@@ -33,6 +33,13 @@ import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -207,10 +214,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         String zipName = new Date().getTime() + ".zip";
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
-            Log.d("SendtoServer", "Trying to send file to server");
             new FileSender().execute(zipPath, zipName);
-            Log.d("SendtoServer", "Tried sending");
-
         }
     }
 
