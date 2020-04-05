@@ -38,7 +38,7 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
         RequestBody postBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart(zipName, file.getName(),
-                        RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                        RequestBody.create(MediaType.parse("application/zip"), file))
                 .build();
 
         OkHttpClient client = new OkHttpClient();
