@@ -31,13 +31,12 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
         String zipPath = params[0];
         String zipName = params[1];
         // TODO put ip in env-variable
-        String serverUrl = "http://<IP:Port>"+"/files/"+zipName;
+        String serverUrl = "http://IP:Port"+"/files";
         File file = new File(zipPath+zipName);
         Log.d("File name", "zipName: "+zipName+" file.getName(): "+file.getName());
-        // TODO file is not send properly...
         RequestBody postBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart(zipName, file.getName(),
+                .addFormDataPart("zip", file.getName(),
                         RequestBody.create(MediaType.parse("application/zip"), file))
                 .build();
 
@@ -47,7 +46,7 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
                 .url(serverUrl)
                 .post(postBody)
                 // TODO insert API-key here
-                .addHeader("API-key", "<API-key>")
+                .addHeader("API-key", "<API-Key>")
                 .build();
 
         try {
