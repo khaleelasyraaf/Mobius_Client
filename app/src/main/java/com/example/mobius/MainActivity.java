@@ -16,33 +16,32 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.content.Context;
+import com.google.android.gms.ads.internal.gmsg.HttpClient;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
-
 
     // UI controls
     private Button mySensorsRequestBtn;
@@ -183,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float Acc_X = v.values[0];
         float Acc_Y = v.values[1];
         float Acc_Z = v.values[2];
+
         float Gyro_X = v.values[0];
         float Gyro_Y = v.values[1];
         float Gyro_Z = v.values[2];
@@ -191,16 +191,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Date today = new Date();
         String dateToStr = format.format(today);
 
-//      frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
-
-//
-//        JSONObject myJsonObject = new JSONObject();
-//        try {
-//            myJsonObject.put("frameStamp", dateToStr);
-//            myJsonObject.put("frameAttributes", frameAttrs);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
         String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
         FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
     }
@@ -213,55 +203,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Date today = new Date();
         String dateToStr = format.format(today);
 
-//      frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
-
-//
-//        JSONObject myJsonObject = new JSONObject();
-//        try {
-//            myJsonObject.put("frameStamp", dateToStr);
-//            myJsonObject.put("frameAttributes", frameAttrs);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-
         String gpsData = dateToStr+","+latitude+","+longitude;
         FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
-    }
-
-    public void sendZipServer() {
-        Socket socket;
-        try {
-            socket = new Socket("tcp://127.0.0.1", 5000);
-
-            File myFile = new File (zipPath);
-            byte [] myByteArray  = new byte [(int)myFile.length()];
-            FileInputStream fis = new FileInputStream(myFile);
-            BufferedInputStream bis = new BufferedInputStream(fis);
-            bis.read(myByteArray,0,myByteArray.length);
-            OutputStream os = socket.getOutputStream();
-
-            os.write(myByteArray,0,myByteArray.length);
-            os.flush();
-
-            socket.close();
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
     boolean filesZipped = false;
     @Override
     protected void onStop() {
         super.onStop();
-
-        if (FileHelper.zip(dataPath, zipPath, new Date().getTime() + ".zip", filesZipped)){
+        String zipName = new Date().getTime() + ".zip";
+        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
-
-            //sendZipServer();
+            new FileSender().execute(zipPath, zipName);
         }
     }
 
@@ -280,9 +233,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (IsDataRequested) {
             String sensorName = "Unknown";
             String sensorNameShort = "UnknownShort";
+
             if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 sensorName = "Accelerometer";
                 sensorNameShort = "Acc";
+
                 AccXText.setText("AccX:" + event.values[0]);
                 AccYText.setText("AccY:" + event.values[1]);
                 AccZText.setText("AccZ:" + event.values[2]);
@@ -291,6 +246,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 sensorName = "Gyroscope";
                 sensorNameShort = "Gyro";
+
                 GyroXText.setText("GyroX:" + event.values[0]);
                 GyroYText.setText("GyroY:" + event.values[1]);
                 GyroZText.setText("GyroZ:" + event.values[2]);
