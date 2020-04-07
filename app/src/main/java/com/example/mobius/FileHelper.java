@@ -19,7 +19,7 @@ public class FileHelper {
     private static String parentPath ="";
 
 
-    public static boolean zip( String sourcePath, String destinationPath, String destinationFileName, Boolean includeParentFolder)  {
+    public static boolean zip(String sourcePath, String destinationPath, String destinationFileName, Boolean includeParentFolder)  {
         new File(destinationPath ).mkdirs();
         FileOutputStream fileOutputStream ;
         ZipOutputStream zipOutputStream =  null;
@@ -129,7 +129,7 @@ public class FileHelper {
 
 
 
-    public static  void saveToFile(String destinationPath, String data, String fileName){
+    public static void saveToFile(String destinationPath, String data, String fileName){
         try {
             new File(destinationPath).mkdirs();
             File file = new File(destinationPath+fileName);
@@ -145,8 +145,6 @@ public class FileHelper {
             Log.d(TAG, ex.getMessage());
         }
     }
-
-
 
 
 }

@@ -1,55 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/relativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#B6B6B8"
     android:orientation="vertical"
-    android:gravity="center"
     tools:context=".MainActivity">
 
     <Button
         android:id="@+id/sensorsRequestBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="240dp"
+        android:layout_marginLeft="240dp"
+        android:layout_marginTop="415dp"
         android:text="Acc"
         tools:layout_editor_absoluteX="161dp"
         tools:layout_editor_absoluteY="413dp" />
 
-    <TextView
-        android:id="@+id/AccXText"
-        android:layout_width="104dp"
-        android:layout_height="wrap_content"
-        android:text="AccX" />
 
-    <TextView
-        android:id="@+id/AccYText"
-        android:layout_width="104dp"
+    <ImageView
+        android:id="@+id/walkIcon"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="AccY" />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="false"
+        android:layout_marginStart="110dp"
+        android:layout_marginLeft="110dp"
+        android:layout_marginTop="92dp"
+        android:src="@drawable/ic_launcher_walk_icon" />
 
-    <TextView
-        android:id="@+id/AccZText"
-        android:layout_width="104dp"
+    <ImageView
+        android:id="@+id/bikeIcon"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="AccZ" />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="108dp"
+        android:layout_marginLeft="108dp"
+        android:layout_marginTop="168dp"
+        android:src="@drawable/ic_launcher_bike_icon" />
 
-    <TextView
-        android:id="@+id/GyroXText"
-        android:layout_width="104dp"
+    <ImageView
+        android:id="@+id/trainIcon"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GyroX" />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="76dp"
+        android:layout_marginLeft="76dp"
+        android:layout_marginTop="248dp"
+        android:src="@drawable/ic_launcher_train_icon" />
 
-    <TextView
-        android:id="@+id/GyroYText"
-        android:layout_width="104dp"
+    <ImageView
+        android:id="@+id/busIcon"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GyroY" />
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="1dp"
+        android:layout_marginLeft="1dp"
+        android:layout_marginTop="248dp"
+        android:layout_toEndOf="@+id/trainIcon"
+        android:layout_toRightOf="@+id/trainIcon"
+        android:src="@drawable/ic_launcher_bus_icon" />
 
-    <TextView
-        android:id="@+id/GyroZText"
-        android:layout_width="104dp"
+    <ImageView
+        android:id="@+id/carIcon"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GyroZ" />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="106dp"
+        android:layout_marginLeft="106dp"
+        android:layout_marginTop="328dp"
+        android:src="@drawable/ic_launcher_car_icon" />
 
-</LinearLayout>
+    <Switch
+        android:id="@+id/switchButtonWalk"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="72dp"
+        android:layout_marginLeft="72dp"
+        android:layout_marginTop="117dp"
+        android:layout_toEndOf="@+id/walkIcon"
+        android:layout_toRightOf="@+id/walkIcon"
+        android:textOff="Off"
+        android:textOn="On" />
+
+    <Switch
+        android:id="@+id/switchButtonBike"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="74dp"
+        android:layout_marginLeft="74dp"
+        android:layout_marginTop="192dp"
+        android:layout_toEndOf="@+id/bikeIcon"
+        android:layout_toRightOf="@+id/bikeIcon"
+        android:textOff="Off"
+        android:textOn="On" />
+
+    <Switch
+        android:id="@+id/switchButtonTrainBus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="33dp"
+        android:layout_marginLeft="33dp"
+        android:layout_marginTop="271dp"
+        android:layout_toEndOf="@+id/busIcon"
+        android:layout_toRightOf="@+id/busIcon"
+        android:textOff="Off"
+        android:textOn="On" />
+
+    <Switch
+        android:id="@+id/switchButtonCar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="76dp"
+        android:layout_marginLeft="76dp"
+        android:layout_marginTop="350dp"
+        android:layout_toEndOf="@+id/carIcon"
+        android:layout_toRightOf="@+id/carIcon"
+        android:textOff="Off"
+        android:textOn="On" />
+
+
+</RelativeLayout>

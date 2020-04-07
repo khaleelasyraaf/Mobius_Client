@@ -2,7 +2,9 @@ package com.example.mobius;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -17,19 +19,25 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.android.gms.ads.internal.gmsg.HttpClient;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URLConnection;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -40,7 +48,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // UI controls
     private Button mySensorsRequestBtn;
-    private TextView AccXText,AccYText, AccZText, GyroXText, GyroYText, GyroZText;
+
+    private Switch switchWalk, switchBike, switchTrainBus, switchCar;
+    private ImageView walkIcon, bikeIcon, trainIcon, busIcon, carIcon;
+
+    public static final String SHARED_PREFS = "sharedPrefs";
 
     private SensorManager SM;
     Sensor myAccelerometer, myGyroscope;
@@ -50,15 +62,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SimpleLocation mLocation;
 
+    public static final String SWITCH_WALK = "switchWalk";
+    public static final String SWITCH_BIKE = "switchBike";
+    public static final String SWITCH_TRAIN_BUS = "switchTrainBus";
+    public static final String SWITCH_CAR = "switchCar";
+
+    private Boolean switchWalkOnOff, switchBikeOnOff, switchTrainBusOnOff, switchCarOnOff;
 
     String FILENAME1 = new Date().getTime() + "_sensors.csv";
     String FILENAME2 = new Date().getTime() + "_gps.csv";
+    String FILENAME3 = new Date().getTime() + "_selfreport.csv";
 
     private String SDPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String dataPath = SDPath + "/Mobius/data/";
     private String zipPath = SDPath + "/Mobius/zip/";
     private String unzipPath = SDPath + "/Mobius/unzip/";
-
 
 
     /** Called when the activity is created. */
@@ -90,8 +108,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         // Register sensor listener
-        SM.registerListener(MainActivity.this, myAccelerometer, 10000); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
-        SM.registerListener(MainActivity.this, myGyroscope, 10000);
+        SM.registerListener(MainActivity.this, myAccelerometer, 1000000000); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
+        SM.registerListener(MainActivity.this, myGyroscope, 1000000000);
 
         mLocation = new SimpleLocation(this);
         mLocation.setBlurRadius(5000);
@@ -106,13 +124,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //UI widgets
         mySensorsRequestBtn = (Button) findViewById(R.id.sensorsRequestBtn);
 
-        AccXText = (TextView) findViewById(R.id.AccXText);
-        AccYText = (TextView) findViewById(R.id.AccYText);
-        AccZText = (TextView) findViewById(R.id.AccZText);
+        switchWalk = (Switch)findViewById(R.id.switchButtonWalk);
+        switchBike = (Switch)findViewById(R.id.switchButtonBike);
+        switchTrainBus = (Switch)findViewById(R.id.switchButtonTrainBus);
+        switchCar = (Switch)findViewById(R.id.switchButtonCar);
 
-        GyroXText = (TextView) findViewById(R.id.GyroXText);
-        GyroYText = (TextView) findViewById(R.id.GyroYText);
-        GyroZText = (TextView) findViewById(R.id.GyroZText);
+        walkIcon = (ImageView)findViewById(R.id.walkIcon);
+        bikeIcon = (ImageView)findViewById(R.id.bikeIcon);
+        trainIcon = (ImageView)findViewById(R.id.trainIcon);
+        busIcon = (ImageView)findViewById(R.id.busIcon);
+        carIcon = (ImageView)findViewById(R.id.carIcon);
 
         //endregion
 
@@ -120,18 +141,208 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //Subscribe to handle the button click
         mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
 
+
         String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
         String gpsNameList = "Time, Latitude, Longitude";
+        String selfreportNameList = "Time, Transportation Mode, Status";
         FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
         FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
+        FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
 
+        //region Switches
+
+        switchWalk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
+                Date today = new Date();
+                String dateToStr = format.format(today);
+
+                String walkYes = "";
+                String walkNo = "";
+
+                if (isChecked)
+                {
+                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
+
+                    switchBike.setEnabled(false);
+                    switchTrainBus.setEnabled(false);
+                    switchCar.setEnabled(false);
+
+                    bikeIcon.setColorFilter(Color.argb(150,200,200,200));
+                    trainIcon.setColorFilter(Color.argb(150,200,200,200));
+                    busIcon.setColorFilter(Color.argb(150,200,200,200));
+                    carIcon.setColorFilter(Color.argb(150,200,200,200));
+
+                    walkYes = ", Walking, Yes";
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
+
+                    switchBike.setEnabled(true);
+                    switchTrainBus.setEnabled(true);
+                    switchCar.setEnabled(true);
+
+                    bikeIcon.setColorFilter(null);
+                    trainIcon.setColorFilter(null);
+                    busIcon.setColorFilter(null);
+                    carIcon.setColorFilter(null);
+
+                    walkNo = ", Walking, No";
+                }
+
+                String walkData = dateToStr + walkYes+walkNo;
+                FileHelper.saveToFile(dataPath, walkData, FILENAME3);
+                saveSelfReportData();
+            }
+        });
+
+        switchBike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
+                Date today = new Date();
+                String dateToStr = format.format(today);
+
+                String bikeYes = "";
+                String bikeNo = "";
+
+                if (isChecked)
+                {
+                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
+
+                    switchWalk.setEnabled(false);
+                    switchTrainBus.setEnabled(false);
+                    switchCar.setEnabled(false);
+
+                    walkIcon.setColorFilter(Color.argb(150,200,200,200));
+                    trainIcon.setColorFilter(Color.argb(150,200,200,200));
+                    busIcon.setColorFilter(Color.argb(150,200,200,200));
+                    carIcon.setColorFilter(Color.argb(150,200,200,200));
+
+                    bikeYes = ", Biking, Yes";
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
+
+                    switchWalk.setEnabled(true);
+                    switchTrainBus.setEnabled(true);
+                    switchCar.setEnabled(true);
+
+                    walkIcon.setColorFilter(null);
+                    trainIcon.setColorFilter(null);
+                    busIcon.setColorFilter(null);
+                    carIcon.setColorFilter(null);
+
+                    bikeNo = ", Biking, No";
+                }
+
+                String bikeData = dateToStr + bikeYes+bikeNo;
+                FileHelper.saveToFile(dataPath, bikeData, FILENAME3);
+                saveSelfReportData();
+            }
+        });
+
+        switchTrainBus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
+                Date today = new Date();
+                String dateToStr = format.format(today);
+
+                String trainbusYes = "";
+                String trainbusNo = "";
+
+                if (isChecked)
+                {
+                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
+
+                    switchWalk.setEnabled(false);
+                    switchBike.setEnabled(false);
+                    switchCar.setEnabled(false);
+
+                    walkIcon.setColorFilter(Color.argb(150,200,200,200));
+                    bikeIcon.setColorFilter(Color.argb(150,200,200,200));
+                    carIcon.setColorFilter(Color.argb(150,200,200,200));
+
+                    trainbusYes = ", Train/Bus, Yes";
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
+
+                    switchWalk.setEnabled(true);
+                    switchBike.setEnabled(true);
+                    switchCar.setEnabled(true);
+
+                    walkIcon.setColorFilter(null);
+                    bikeIcon.setColorFilter(null);
+                    carIcon.setColorFilter(null);
+
+                    trainbusNo = ", Train/Bus, No";
+                }
+
+                String trainbusData = dateToStr + trainbusYes+trainbusNo;
+                FileHelper.saveToFile(dataPath, trainbusData, FILENAME3);
+                saveSelfReportData();
+            }
+        });
+
+        switchCar.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
+                Date today = new Date();
+                String dateToStr = format.format(today);
+
+                String carYes = "";
+                String carNo = "";
+
+                if (isChecked)
+                {
+                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
+
+                    switchWalk.setEnabled(false);
+                    switchBike.setEnabled(false);
+                    switchTrainBus.setEnabled(false);
+
+                    walkIcon.setColorFilter(Color.argb(150,200,200,200));
+                    bikeIcon.setColorFilter(Color.argb(150,200,200,200));
+                    trainIcon.setColorFilter(Color.argb(150,200,200,200));
+                    busIcon.setColorFilter(Color.argb(150,200,200,200));
+
+                    carYes = ", Car, Yes";
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
+
+                    switchWalk.setEnabled(true);
+                    switchBike.setEnabled(true);
+                    switchTrainBus.setEnabled(true);
+
+                    walkIcon.setColorFilter(null);
+                    bikeIcon.setColorFilter(null);
+                    trainIcon.setColorFilter(null);
+                    busIcon.setColorFilter(null);
+
+                    carNo = ", Car, No";
+                }
+
+                String carData = dateToStr + carYes+carNo;
+                FileHelper.saveToFile(dataPath, carData, FILENAME3);
+                saveSelfReportData();
+            }
+        });
+
+        //endregion
+
+        loadSelfReportData();
+        updateViews();
 
         startGPS();
-        //stopGPS();
-
-        //startSensors();
-        //stopSensors();
-
 
     }
 
@@ -187,15 +398,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
-//      frameAttributesSensors frameAttrs = new frameAttributesSensors(Acc_X, Acc_Y, Acc_Z, Gyro_X, Gyro_Y, Gyro_Z);
-//
-//        JSONObject myJsonObject = new JSONObject();
-//        try {
-//            myJsonObject.put("frameStamp", dateToStr);
-//            myJsonObject.put("frameAttributes", frameAttrs);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
+
         String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
         FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
     }
@@ -207,54 +410,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
-//      frameAttributesGPS frameAttrs = new frameAttributesGPS(latitude, longitude);
-//
-//        JSONObject myJsonObject = new JSONObject();
-//        try {
-//            myJsonObject.put("frameStamp", dateToStr);
-//            myJsonObject.put("frameAttributes", frameAttrs);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
 
         String gpsData = dateToStr+","+latitude+","+longitude;
         FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
     }
 
-    public void sendZipServer() {
-        Socket socket;
-        try {
-            socket = new Socket("tcp://127.0.0.1", 5000);
-
-            File myFile = new File (zipPath);
-            byte [] myByteArray  = new byte [(int)myFile.length()];
-            FileInputStream fis = new FileInputStream(myFile);
-            BufferedInputStream bis = new BufferedInputStream(fis);
-            bis.read(myByteArray,0,myByteArray.length);
-            OutputStream os = socket.getOutputStream();
-
-            os.write(myByteArray,0,myByteArray.length);
-            os.flush();
-
-            socket.close();
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     boolean filesZipped = false;
     @Override
     protected void onStop() {
         super.onStop();
 
-        if (FileHelper.zip(dataPath, zipPath, new Date().getTime() + ".zip", filesZipped)){
-            Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
+        String zipName = new Date().getTime() + ".zip";
+        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)) {
+            {
+                Toast.makeText(MainActivity.this, "Zip successfully.", Toast.LENGTH_LONG).show();
 
-            //sendZipServer();
+                //new FileSender().execute(zipPath, zipName);
+            }
         }
     }
 
@@ -278,26 +451,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 sensorName = "Accelerometer";
                 sensorNameShort = "Acc";
 
-                AccXText.setText("AccX:" + event.values[0]);
-                AccYText.setText("AccY:" + event.values[1]);
-                AccZText.setText("AccZ:" + event.values[2]);
-
             }
             else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 sensorName = "Gyroscope";
                 sensorNameShort = "Gyro";
 
-                GyroXText.setText("GyroX:" + event.values[0]);
-                GyroYText.setText("GyroY:" + event.values[1]);
-                GyroZText.setText("GyroZ:" + event.values[2]);
-
             }
+
             Log.d(sensorName, sensorNameShort+"_X:" + event.values[0] +
                     " "+sensorNameShort+"_Y:" + event.values[1] +
                     " "+sensorNameShort+"_Z:" + event.values[2]);
-//            Toast.makeText(MainActivity.this, sensorNameShort+"_X: " + event.values[0] +
-//                    ", "+sensorNameShort+"_Y: " + event.values[1] +
-//                    ", "+sensorNameShort+"_Z: " + event.values[2], Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
+
             saveSensorData(event);
         }
 
@@ -315,6 +481,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         }
     };
+    
 
+    public void saveSelfReportData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putBoolean(SWITCH_WALK, switchWalk.isChecked());
+        editor.putBoolean(SWITCH_BIKE, switchBike.isChecked());
+        editor.putBoolean(SWITCH_TRAIN_BUS, switchTrainBus.isChecked());
+        editor.putBoolean(SWITCH_CAR, switchCar.isChecked());
+
+        editor.apply();
+    }
+
+    public void loadSelfReportData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        switchWalkOnOff = sharedPreferences.getBoolean(SWITCH_WALK, false);
+        switchBikeOnOff = sharedPreferences.getBoolean(SWITCH_BIKE, false);
+        switchTrainBusOnOff = sharedPreferences.getBoolean(SWITCH_TRAIN_BUS, false);
+        switchCarOnOff = sharedPreferences.getBoolean(SWITCH_CAR, false);
+    }
+
+    public void updateViews() {
+
+        switchWalk.setChecked(switchWalkOnOff);
+        switchBike.setChecked(switchBikeOnOff);
+        switchTrainBus.setChecked(switchTrainBusOnOff);
+        switchCar.setChecked(switchCarOnOff);
+
+    }
 
 }
