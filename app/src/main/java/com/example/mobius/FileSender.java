@@ -61,4 +61,3 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
 
     }
 }
-

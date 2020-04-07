@@ -51,9 +51,7 @@ public class FileHelper {
 
                 }
         }
-
         return true;
-
     }
 
     private static void zipFile(ZipOutputStream zipOutputStream, String sourcePath) throws  IOException{
@@ -82,8 +80,6 @@ public class FileHelper {
                 input.close();
             }
         }
-
-
 
     }
 
@@ -126,7 +122,6 @@ public class FileHelper {
         }
         return true;
     }
-
 
 
     public static void saveToFile(String destinationPath, String data, String fileName){

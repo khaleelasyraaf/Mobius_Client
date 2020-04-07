@@ -26,10 +26,16 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.internal.gmsg.HttpClient;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -38,13 +44,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
-
 
     // UI controls
     private Button mySensorsRequestBtn;
@@ -136,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         carIcon = (ImageView)findViewById(R.id.carIcon);
 
         //endregion
-
 
         //Subscribe to handle the button click
         mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
@@ -343,6 +343,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         updateViews();
 
         startGPS();
+        //stopGPS();
+
+        //startSensors();
+        //stopSensors();
 
     }
 
@@ -354,7 +358,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             final double longitude = mLocation.getLongitude();
 
             Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
-            Log.d("GPS", "Lat:" + latitude + "Long:" + longitude);
+            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
+
             mHandler.postDelayed(this, 10000);
 
             saveGPSData();
@@ -420,14 +425,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onStop() {
         super.onStop();
-
         String zipName = new Date().getTime() + ".zip";
-        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)) {
-            {
-                Toast.makeText(MainActivity.this, "Zip successfully.", Toast.LENGTH_LONG).show();
-
-                //new FileSender().execute(zipPath, zipName);
-            }
+        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
+            Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
+            new FileSender().execute(zipPath, zipName);
         }
     }
 
@@ -481,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         }
     };
-    
+
 
     public void saveSelfReportData() {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
