@@ -15,6 +15,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -28,10 +29,12 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
 
     @Override
     protected Boolean doInBackground(String... params) {
+        Dotenv dotenv = Dotenv.configure().directory("/assets").filename("env").load();
+
         String zipPath = params[0];
         String zipName = params[1];
         // TODO put ip in env-variable
-        String serverUrl = "http://IP:Port"+"/files";
+        String serverUrl = dotenv.get("SERVER-URL", "No-Server-URL");
         File file = new File(zipPath+zipName);
         Log.d("File name", "zipName: "+zipName+" file.getName(): "+file.getName());
         RequestBody postBody = new MultipartBody.Builder()
@@ -46,7 +49,7 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
                 .url(serverUrl)
                 .post(postBody)
                 // TODO insert API-key here
-                .addHeader("API-key", "<API-Key>")
+                .addHeader("API-key", dotenv.get("API-key", "<No-API-Key>"))
                 .build();
 
         try {

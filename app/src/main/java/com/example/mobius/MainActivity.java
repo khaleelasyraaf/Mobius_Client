@@ -357,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             final double latitude = mLocation.getLatitude();
             final double longitude = mLocation.getLongitude();
 
-            Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude: " + longitude, Toast.LENGTH_SHORT).show();
             Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
 
             mHandler.postDelayed(this, 10000);
