@@ -3,21 +3,10 @@ package com.example.mobius;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -36,7 +25,6 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
         // TODO put ip in env-variable
         String serverUrl = dotenv.get("SERVER-URL", "No-Server-URL");
         File file = new File(zipPath+zipName);
-        Log.d("File name", "zipName: "+zipName+" file.getName(): "+file.getName());
         RequestBody postBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("zip", file.getName(),
@@ -58,7 +46,7 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
             return true;
         } catch (IOException e) {
             Log.d("SendToServer", "Error: "+e.toString());
-            e.printStackTrace();
+//            e.printStackTrace();
             return false;
         }
 
