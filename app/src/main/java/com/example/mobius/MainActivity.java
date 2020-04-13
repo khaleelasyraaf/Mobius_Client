@@ -62,6 +62,69 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private String zipPath = SDPath + "/Mobius/zip/";
     private String unzipPath = SDPath + "/Mobius/unzip/";
 
+    private void changeSliders(boolean isChecked, String mode){
+        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
+        Date today = new Date();
+        String dateToStr = format.format(today);
+
+        if (isChecked)
+        {
+            // Disable all sliders
+            switchBike.setEnabled(false);
+            switchTrainBus.setEnabled(false);
+            switchCar.setEnabled(false);
+            switchWalk.setEnabled(false);
+            // Grey Icons out
+            bikeIcon.setColorFilter(Color.argb(150,200,200,200));
+            trainIcon.setColorFilter(Color.argb(150,200,200,200));
+            busIcon.setColorFilter(Color.argb(150,200,200,200));
+            carIcon.setColorFilter(Color.argb(150,200,200,200));
+            walkIcon.setColorFilter(Color.argb(150,200,200,200));
+        }
+        else
+        {
+            // Enable the sliders
+            switchBike.setEnabled(true);
+            switchTrainBus.setEnabled(true);
+            switchCar.setEnabled(true);
+            switchWalk.setEnabled(true);
+            // Colorize icons
+            bikeIcon.clearColorFilter();
+            trainIcon.clearColorFilter();
+            busIcon.clearColorFilter();
+            carIcon.clearColorFilter();
+            walkIcon.clearColorFilter();
+
+        }
+        // Change only the one that was selected back on
+        if (isChecked){
+            switch (mode){
+                case "Walking":
+                    switchWalk.setEnabled(true);
+                    walkIcon.clearColorFilter();
+                    break;
+                case "Biking":
+                    switchBike.setEnabled(true);
+                    bikeIcon.clearColorFilter();
+                    break;
+                case "Car":
+                    switchCar.setEnabled(true);
+                    carIcon.clearColorFilter();
+                    break;
+                case "Train/Bus":
+                    switchTrainBus.setEnabled(true);
+                    busIcon.clearColorFilter();
+                    trainIcon.clearColorFilter();
+                    break;
+            }
+        }
+
+//        Toast.makeText(MainActivity.this, mode + " " + isChecked, Toast.LENGTH_SHORT).show();
+        Log.d("Transport Mode", mode + " " + isChecked);
+        String walkData = dateToStr + ", " + mode + ", " + isChecked;
+        FileHelper.saveToFile(dataPath, walkData, FILENAME3);
+        saveSelfReportData();
+    }
 
     /** Called when the activity is created. */
     @Override
@@ -137,186 +200,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switchWalk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
-                Date today = new Date();
-                String dateToStr = format.format(today);
-
-                String walkYes = "";
-                String walkNo = "";
-
-                if (isChecked)
-                {
-                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
-
-                    switchBike.setEnabled(false);
-                    switchTrainBus.setEnabled(false);
-                    switchCar.setEnabled(false);
-
-                    bikeIcon.setColorFilter(Color.argb(150,200,200,200));
-                    trainIcon.setColorFilter(Color.argb(150,200,200,200));
-                    busIcon.setColorFilter(Color.argb(150,200,200,200));
-                    carIcon.setColorFilter(Color.argb(150,200,200,200));
-
-                    walkYes = ", Walking, Yes";
-                }
-                else
-                {
-                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
-
-                    switchBike.setEnabled(true);
-                    switchTrainBus.setEnabled(true);
-                    switchCar.setEnabled(true);
-
-                    bikeIcon.setColorFilter(null);
-                    trainIcon.setColorFilter(null);
-                    busIcon.setColorFilter(null);
-                    carIcon.setColorFilter(null);
-
-                    walkNo = ", Walking, No";
-                }
-
-                String walkData = dateToStr + walkYes+walkNo;
-                FileHelper.saveToFile(dataPath, walkData, FILENAME3);
-                saveSelfReportData();
+                changeSliders(isChecked, "Walking");
             }
         });
 
         switchBike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
-                Date today = new Date();
-                String dateToStr = format.format(today);
-
-                String bikeYes = "";
-                String bikeNo = "";
-
-                if (isChecked)
-                {
-                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
-
-                    switchWalk.setEnabled(false);
-                    switchTrainBus.setEnabled(false);
-                    switchCar.setEnabled(false);
-
-                    walkIcon.setColorFilter(Color.argb(150,200,200,200));
-                    trainIcon.setColorFilter(Color.argb(150,200,200,200));
-                    busIcon.setColorFilter(Color.argb(150,200,200,200));
-                    carIcon.setColorFilter(Color.argb(150,200,200,200));
-
-                    bikeYes = ", Biking, Yes";
-                }
-                else
-                {
-                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
-
-                    switchWalk.setEnabled(true);
-                    switchTrainBus.setEnabled(true);
-                    switchCar.setEnabled(true);
-
-                    walkIcon.setColorFilter(null);
-                    trainIcon.setColorFilter(null);
-                    busIcon.setColorFilter(null);
-                    carIcon.setColorFilter(null);
-
-                    bikeNo = ", Biking, No";
-                }
-
-                String bikeData = dateToStr + bikeYes+bikeNo;
-                FileHelper.saveToFile(dataPath, bikeData, FILENAME3);
-                saveSelfReportData();
+                changeSliders(isChecked, "Biking");
             }
         });
 
         switchTrainBus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
-                Date today = new Date();
-                String dateToStr = format.format(today);
-
-                String trainbusYes = "";
-                String trainbusNo = "";
-
-                if (isChecked)
-                {
-                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
-
-                    switchWalk.setEnabled(false);
-                    switchBike.setEnabled(false);
-                    switchCar.setEnabled(false);
-
-                    walkIcon.setColorFilter(Color.argb(150,200,200,200));
-                    bikeIcon.setColorFilter(Color.argb(150,200,200,200));
-                    carIcon.setColorFilter(Color.argb(150,200,200,200));
-
-                    trainbusYes = ", Train/Bus, Yes";
-                }
-                else
-                {
-                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
-
-                    switchWalk.setEnabled(true);
-                    switchBike.setEnabled(true);
-                    switchCar.setEnabled(true);
-
-                    walkIcon.setColorFilter(null);
-                    bikeIcon.setColorFilter(null);
-                    carIcon.setColorFilter(null);
-
-                    trainbusNo = ", Train/Bus, No";
-                }
-
-                String trainbusData = dateToStr + trainbusYes+trainbusNo;
-                FileHelper.saveToFile(dataPath, trainbusData, FILENAME3);
-                saveSelfReportData();
+                changeSliders(isChecked, "Train/Bus");
             }
         });
 
         switchCar.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
-                Date today = new Date();
-                String dateToStr = format.format(today);
-
-                String carYes = "";
-                String carNo = "";
-
-                if (isChecked)
-                {
-                    Toast.makeText(MainActivity.this, "On", Toast.LENGTH_SHORT).show();
-
-                    switchWalk.setEnabled(false);
-                    switchBike.setEnabled(false);
-                    switchTrainBus.setEnabled(false);
-
-                    walkIcon.setColorFilter(Color.argb(150,200,200,200));
-                    bikeIcon.setColorFilter(Color.argb(150,200,200,200));
-                    trainIcon.setColorFilter(Color.argb(150,200,200,200));
-                    busIcon.setColorFilter(Color.argb(150,200,200,200));
-
-                    carYes = ", Car, Yes";
-                }
-                else
-                {
-                    Toast.makeText(MainActivity.this, "Off", Toast.LENGTH_SHORT).show();
-
-                    switchWalk.setEnabled(true);
-                    switchBike.setEnabled(true);
-                    switchTrainBus.setEnabled(true);
-
-                    walkIcon.setColorFilter(null);
-                    bikeIcon.setColorFilter(null);
-                    trainIcon.setColorFilter(null);
-                    busIcon.setColorFilter(null);
-
-                    carNo = ", Car, No";
-                }
-
-                String carData = dateToStr + carYes+carNo;
-                FileHelper.saveToFile(dataPath, carData, FILENAME3);
-                saveSelfReportData();
+                changeSliders(isChecked, "Car");
             }
         });
 
