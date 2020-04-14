@@ -2,6 +2,7 @@ package com.example.mobius;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -31,7 +32,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     // UI controls
-    private Button mySensorsRequestBtn;
+    private Button mySensorsRequestBtn, mySensorsCancelBtn, myStartServiceBtn, myStopServiceBtn;
 
     private Switch switchWalk, switchBike, switchTrainBus, switchCar;
     private ImageView walkIcon, bikeIcon, trainIcon, busIcon, carIcon;
@@ -141,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 123);
 
-
         setContentView(R.layout.activity_main);
         context = this;
 
@@ -170,6 +170,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //UI widgets
         mySensorsRequestBtn = (Button) findViewById(R.id.sensorsRequestBtn);
+        mySensorsCancelBtn = (Button) findViewById(R.id.sensorsCancelBtn);
+        myStartServiceBtn = (Button) findViewById(R.id.startServiceBtn);
+        myStopServiceBtn = (Button) findViewById(R.id.stopServiceBtn);
 
         switchWalk = (Switch)findViewById(R.id.switchButtonWalk);
         switchBike = (Switch)findViewById(R.id.switchButtonBike);
@@ -186,6 +189,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //Subscribe to handle the button click
         mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
+        mySensorsCancelBtn.setOnClickListener(myOnSensorsCancelClickHandler);
 
 
         String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
@@ -231,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         updateViews();
 
         startGPS();
+        //startSensors();
         //stopGPS();
 
         //startSensors();
@@ -238,6 +243,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    String inputExtra = "inputExtra";
+    public void startService(View v) {
+        final double latitude = mLocation.getLatitude();
+        final double longitude = mLocation.getLongitude();
+
+        Intent serviceIntent = new Intent(this, AppService.class);
+        serviceIntent.putExtra(inputExtra, latitude + longitude);
+
+        ContextCompat.startForegroundService(this, serviceIntent);
+    }
+
+    public void stopService(View v) {
+        Intent serviceIntent = new Intent(this, AppService.class);
+
+        stopService(serviceIntent);
+    }
 
     private Runnable mGPSRunnable = new Runnable() {
         @Override
@@ -245,12 +266,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             final double latitude = mLocation.getLatitude();
             final double longitude = mLocation.getLongitude();
 
-            Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude: " + longitude, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
             Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
 
             mHandler.postDelayed(this, 10000);
 
-            saveGPSData();
+            //saveGPSData();
 
         }
     };
@@ -263,10 +284,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mHandler.removeCallbacks(mGPSRunnable);
     }
 
-    private Runnable mSensorsRunnable = new Runnable() {
+    private final Runnable mSensorsRunnable = new Runnable() {
         @Override
         public void run() {
-            mHandler.postDelayed(this, 10000);
+            IsDataRequested = true;
+            mHandler.postDelayed(this, 5000);
             //stopSensors();
         }
     };
@@ -308,11 +330,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 
     boolean filesZipped = false;
     @Override
     protected void onStop() {
         super.onStop();
+
         String zipName = new Date().getTime() + ".zip";
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
@@ -340,20 +367,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 sensorName = "Accelerometer";
                 sensorNameShort = "Acc";
 
+                IsDataRequested = false;
             }
             else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 sensorName = "Gyroscope";
                 sensorNameShort = "Gyro";
 
+                IsDataRequested = false;
             }
 
             Log.d(sensorName, sensorNameShort+"_X:" + event.values[0] +
                     " "+sensorNameShort+"_Y:" + event.values[1] +
                     " "+sensorNameShort+"_Z:" + event.values[2]);
 
-            Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
-
-            saveSensorData(event);
+            //saveSensorData(event);
         }
 
     }
@@ -365,8 +392,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 public void onClick(View sensors) {
 
                 IsDataRequested = !IsDataRequested;
+                startSensors();
                 Log.d("Sensors", "Sensors Button Pressed");
+                //Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
 
+        }
+    };
+
+    private OnClickListener myOnSensorsCancelClickHandler = new OnClickListener() {
+        @Override
+        public void onClick(View sensors) {
+
+            SM.unregisterListener(MainActivity.this);
 
         }
     };
