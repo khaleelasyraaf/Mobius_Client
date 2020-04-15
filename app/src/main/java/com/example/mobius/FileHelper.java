@@ -125,13 +125,14 @@ public class FileHelper {
 
 
     public static void saveToFile(String destinationPath, String data, String fileName){
+        FileOutputStream fileOutputStream = null;
         try {
             new File(destinationPath).mkdirs();
             File file = new File(destinationPath+fileName);
             if (!file.exists()) {
                 file.createNewFile();
             }
-            FileOutputStream fileOutputStream = new FileOutputStream(file,true);
+            fileOutputStream = new FileOutputStream(file,true);
             fileOutputStream.write((data + System.getProperty("line.separator")).getBytes());
 
         }  catch(FileNotFoundException ex) {
@@ -139,7 +140,14 @@ public class FileHelper {
         }  catch(IOException ex) {
             Log.d(TAG, ex.getMessage());
         }
+        finally {
+            if (fileOutputStream != null) {
+                try {
+                    fileOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
-
-
 }

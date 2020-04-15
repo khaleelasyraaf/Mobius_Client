@@ -10,51 +10,32 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/sensorsRequestBtn"
+        android:id="@+id/startEverythingBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="240dp"
-        android:layout_marginLeft="240dp"
-        android:layout_marginTop="415dp"
+        android:layout_marginStart="79dp"
+        android:layout_marginLeft="79dp"
+        android:layout_marginTop="417dp"
+        android:onClick="startEverything"
         android:text="Acc"
         tools:layout_editor_absoluteX="161dp"
         tools:layout_editor_absoluteY="413dp" />
 
-
     <Button
-        android:id="@+id/startServiceBtn"
+        android:id="@+id/stopEverythingBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="102dp"
-        android:layout_marginLeft="102dp"
-        android:layout_marginTop="43dp"
-        android:onClick="startService"
-        android:text="Start"
-        tools:layout_editor_absoluteX="161dp"
-        tools:layout_editor_absoluteY="413dp" />
-
-    <Button
-        android:id="@+id/stopServiceBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="230dp"
-        android:layout_marginLeft="230dp"
-        android:layout_marginTop="43dp"
-        android:onClick="stopService"
-        android:text="Stop"
-        tools:layout_editor_absoluteX="161dp"
-        tools:layout_editor_absoluteY="413dp" />
+        android:layout_marginStart="238dp"
+        android:layout_marginLeft="238dp"
+        android:layout_marginTop="417dp"
+        android:onClick="stopEverything"
+        android:text="Cancel" />
 
     <ImageView
         android:id="@+id/walkIcon"
@@ -168,18 +149,5 @@
         android:layout_toRightOf="@+id/carIcon"
         android:textOff="Off"
         android:textOn="On" />
-
-    <Button
-        android:id="@+id/sensorsCancelBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="63dp"
-        android:layout_marginLeft="63dp"
-        android:layout_marginTop="412dp"
-        android:text="Cancel" />
-
 
 </RelativeLayout>

@@ -1,6 +1,7 @@
 package com.example.mobius;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -32,7 +33,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     // UI controls
-    private Button mySensorsRequestBtn, mySensorsCancelBtn, myStartServiceBtn, myStopServiceBtn;
+    private Button myStartEverythingBtn, myStopEverythingBtn, myStartServiceBtn, myStopServiceBtn;
 
     private Switch switchWalk, switchBike, switchTrainBus, switchCar;
     private ImageView walkIcon, bikeIcon, trainIcon, busIcon, carIcon;
@@ -62,6 +63,110 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private String dataPath = SDPath + "/Mobius/data/";
     private String zipPath = SDPath + "/Mobius/zip/";
     private String unzipPath = SDPath + "/Mobius/unzip/";
+
+
+    /** Called when the activity is created. */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
+
+        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 123);
+
+        setContentView(R.layout.activity_main);
+        context = this;
+
+        // Create sensor manager
+        SM = (SensorManager)getSystemService(SENSOR_SERVICE);
+
+        // Accelerometer sensor
+        myAccelerometer = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        // Gyroscope sensor
+        myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        // Register sensor listener
+        SM.registerListener(MainActivity.this, myAccelerometer, 1000000000); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
+        SM.registerListener(MainActivity.this, myGyroscope, 1000000000);
+
+        mLocation = new SimpleLocation(this);
+        mLocation.setBlurRadius(5000);
+
+        if (!mLocation.hasLocationEnabled()) {
+            // ask the user to enable location access
+            SimpleLocation.openSettings(this);
+        }
+
+        //region Widgets
+
+        //UI widgets
+        myStartEverythingBtn = (Button) findViewById(R.id.startEverythingBtn);
+        myStopEverythingBtn = (Button) findViewById(R.id.stopEverythingBtn);
+
+        switchWalk = (Switch)findViewById(R.id.switchButtonWalk);
+        switchBike = (Switch)findViewById(R.id.switchButtonBike);
+        switchTrainBus = (Switch)findViewById(R.id.switchButtonTrainBus);
+        switchCar = (Switch)findViewById(R.id.switchButtonCar);
+
+        walkIcon = (ImageView)findViewById(R.id.walkIcon);
+        bikeIcon = (ImageView)findViewById(R.id.bikeIcon);
+        trainIcon = (ImageView)findViewById(R.id.trainIcon);
+        busIcon = (ImageView)findViewById(R.id.busIcon);
+        carIcon = (ImageView)findViewById(R.id.carIcon);
+
+        //endregion
+
+        String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
+        String gpsNameList = "Time, Latitude, Longitude";
+        String selfreportNameList = "Time, Transportation Mode, Status";
+        FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
+        FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
+        FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
+
+        //region Switches
+
+        switchWalk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                changeSliders(isChecked, "Walking");
+            }
+        });
+
+        switchBike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                changeSliders(isChecked, "Biking");
+            }
+        });
+
+        switchTrainBus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                changeSliders(isChecked, "Train/Bus");
+            }
+        });
+
+        switchCar.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                changeSliders(isChecked, "Car");
+            }
+        });
+
+        //endregion
+
+        loadSelfReportData();
+        updateViews();
+
+        startService();
+    }
 
     private void changeSliders(boolean isChecked, String mode){
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
@@ -127,124 +232,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         saveSelfReportData();
     }
 
-    /** Called when the activity is created. */
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-        }
-
-        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 123);
-
-        setContentView(R.layout.activity_main);
-        context = this;
-
-        // Create sensor manager
-        SM = (SensorManager)getSystemService(SENSOR_SERVICE);
-
-        // Accelerometer sensor
-        myAccelerometer = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
-        // Gyroscope sensor
-        myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-        // Register sensor listener
-        SM.registerListener(MainActivity.this, myAccelerometer, 1000000000); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
-        SM.registerListener(MainActivity.this, myGyroscope, 1000000000);
-
-        mLocation = new SimpleLocation(this);
-        mLocation.setBlurRadius(5000);
-
-        if (!mLocation.hasLocationEnabled()) {
-            // ask the user to enable location access
-            SimpleLocation.openSettings(this);
-        }
-
-        //region Widgets
-
-        //UI widgets
-        mySensorsRequestBtn = (Button) findViewById(R.id.sensorsRequestBtn);
-        mySensorsCancelBtn = (Button) findViewById(R.id.sensorsCancelBtn);
-        myStartServiceBtn = (Button) findViewById(R.id.startServiceBtn);
-        myStopServiceBtn = (Button) findViewById(R.id.stopServiceBtn);
-
-        switchWalk = (Switch)findViewById(R.id.switchButtonWalk);
-        switchBike = (Switch)findViewById(R.id.switchButtonBike);
-        switchTrainBus = (Switch)findViewById(R.id.switchButtonTrainBus);
-        switchCar = (Switch)findViewById(R.id.switchButtonCar);
-
-        walkIcon = (ImageView)findViewById(R.id.walkIcon);
-        bikeIcon = (ImageView)findViewById(R.id.bikeIcon);
-        trainIcon = (ImageView)findViewById(R.id.trainIcon);
-        busIcon = (ImageView)findViewById(R.id.busIcon);
-        carIcon = (ImageView)findViewById(R.id.carIcon);
-
-        //endregion
-
-        //Subscribe to handle the button click
-        mySensorsRequestBtn.setOnClickListener(myOnSensorsRequestClickHandler);
-        mySensorsCancelBtn.setOnClickListener(myOnSensorsCancelClickHandler);
-
-
-        String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
-        String gpsNameList = "Time, Latitude, Longitude";
-        String selfreportNameList = "Time, Transportation Mode, Status";
-        FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
-        FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
-        FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
-
-        //region Switches
-
-        switchWalk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                changeSliders(isChecked, "Walking");
-            }
-        });
-
-        switchBike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                changeSliders(isChecked, "Biking");
-            }
-        });
-
-        switchTrainBus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                changeSliders(isChecked, "Train/Bus");
-            }
-        });
-
-        switchCar.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                changeSliders(isChecked, "Car");
-            }
-        });
-
-        //endregion
-
-        loadSelfReportData();
-        updateViews();
-
-        startGPS();
-        //startSensors();
-        //stopGPS();
-
-        //startSensors();
-        //stopSensors();
-
-    }
-
     String inputExtra = "inputExtra";
-    public void startService(View v) {
+    public void startService() {
         final double latitude = mLocation.getLatitude();
         final double longitude = mLocation.getLongitude();
 
@@ -254,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         ContextCompat.startForegroundService(this, serviceIntent);
     }
 
-    public void stopService(View v) {
+    public void stopService() {
         Intent serviceIntent = new Intent(this, AppService.class);
 
         stopService(serviceIntent);
@@ -271,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             mHandler.postDelayed(this, 10000);
 
-            //saveGPSData();
+            saveGPSData();
 
         }
     };
@@ -289,7 +278,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         public void run() {
             IsDataRequested = true;
             mHandler.postDelayed(this, 5000);
-            //stopSensors();
         }
     };
 
@@ -297,9 +285,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorsRunnable.run();
     }
 
-    public void stopSensors() {
-        mHandler.removeCallbacks(mSensorsRunnable);
-    }
+//    public void stopSensors() {
+//        mHandler.removeCallbacks(mSensorsRunnable);
+//    }
 
     public void saveSensorData(SensorEvent v) {
         float Acc_X = v.values[0];
@@ -331,22 +319,41 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onPause() {
+        super.onPause();
+        Log.d("onPause", "onPause");
     }
 
-    boolean filesZipped = false;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("onResume", "onResume");
+    }
+
+//    Disable back button to avoid onStop() and onDestroy()
+//    @SuppressLint("MissingSuperCall")
+//    @Override
+//    public void onBackPressed()
+//    {
+//         super.onBackPressed();
+//    }
+
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d("onStop", "onStop");
 
         String zipName = new Date().getTime() + ".zip";
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
-            Toast.makeText(MainActivity.this,"Zip successfully.",Toast.LENGTH_LONG).show();
-            new FileSender().execute(zipPath, zipName);
+            //new FileSender().execute(zipPath, zipName);
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("onDestroy", "onDestroy");
+    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -380,34 +387,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     " "+sensorNameShort+"_Y:" + event.values[1] +
                     " "+sensorNameShort+"_Z:" + event.values[2]);
 
-            //saveSensorData(event);
+            saveSensorData(event);
         }
 
     }
-
-
-    // Button that sends the sensor data when clicked
-    private OnClickListener myOnSensorsRequestClickHandler = new OnClickListener() {
-        @Override
-                public void onClick(View sensors) {
-
-                IsDataRequested = !IsDataRequested;
-                startSensors();
-                Log.d("Sensors", "Sensors Button Pressed");
-                //Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
-
-        }
-    };
-
-    private OnClickListener myOnSensorsCancelClickHandler = new OnClickListener() {
-        @Override
-        public void onClick(View sensors) {
-
-            SM.unregisterListener(MainActivity.this);
-
-        }
-    };
-
 
     public void saveSelfReportData() {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
@@ -428,6 +411,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switchBikeOnOff = sharedPreferences.getBoolean(SWITCH_BIKE, false);
         switchTrainBusOnOff = sharedPreferences.getBoolean(SWITCH_TRAIN_BUS, false);
         switchCarOnOff = sharedPreferences.getBoolean(SWITCH_CAR, false);
+
     }
 
     public void updateViews() {
@@ -436,7 +420,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switchBike.setChecked(switchBikeOnOff);
         switchTrainBus.setChecked(switchTrainBusOnOff);
         switchCar.setChecked(switchCarOnOff);
+    }
 
+    // Button that sends the sensor data when clicked
+    public void startEverything(View v) {
+        IsDataRequested = !IsDataRequested;
+        startSensors();
+        startGPS();
+        Log.d("Sensors", "Sensors Button Pressed");
+        Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
+    }
+
+    boolean filesZipped = false;
+    public void stopEverything(View v) {
+        SM.unregisterListener(MainActivity.this);
+        stopGPS();
+        stopService();
+        Toast.makeText(MainActivity.this, "Sensors stopped and zipped", Toast.LENGTH_SHORT).show();
     }
 
 }
