@@ -13,8 +13,6 @@ import static com.example.mobius.App.CHANNEL_ID;
 
 public class AppService extends Service {
 
-    String inputExtra = "inputExtra";
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -22,14 +20,12 @@ public class AppService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String input = intent.getStringExtra(inputExtra);
-
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Mobius is running")
-                .setContentText(input)
+                .setContentText("Nothing to worry about")
                 .setSmallIcon(R.drawable.ic_android)
                 .setContentIntent(pendingIntent)
                 .build();

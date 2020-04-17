@@ -54,10 +54,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public static final String SWITCH_CAR = "switchCar";
 
     private Boolean switchWalkOnOff, switchBikeOnOff, switchTrainBusOnOff, switchCarOnOff;
+    boolean IsDataRequested = false;
 
-    String FILENAME1 = new Date().getTime() + "_sensors.csv";
-    String FILENAME2 = new Date().getTime() + "_gps.csv";
-    String FILENAME3 = new Date().getTime() + "_selfreport.csv";
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    Date today = new Date();
+    String currentDatetime = format.format(today);
+    String FILENAME1 = currentDatetime + "_sensors.csv";
+    String FILENAME2 = currentDatetime + "_gps.csv";
+    String FILENAME3 = currentDatetime + "_selfreport.csv";
 
     private String SDPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String dataPath = SDPath + "/Mobius/data/";
@@ -77,8 +81,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
-
-        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 123);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 123);
+        }
+//        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 123);
 
         setContentView(R.layout.activity_main);
         context = this;
@@ -122,14 +128,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         carIcon = (ImageView)findViewById(R.id.carIcon);
 
         //endregion
-
-        String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
-        String gpsNameList = "Time, Latitude, Longitude";
-        String selfreportNameList = "Time, Transportation Mode, Status";
-        FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
-        FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
-        FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
-
         //region Switches
 
         switchWalk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -161,15 +159,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         //endregion
-
         loadSelfReportData();
         updateViews();
-
-        startService();
     }
 
     private void changeSliders(boolean isChecked, String mode){
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
         Date today = new Date();
         String dateToStr = format.format(today);
 
@@ -232,91 +226,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         saveSelfReportData();
     }
 
-    String inputExtra = "inputExtra";
-    public void startService() {
-        final double latitude = mLocation.getLatitude();
-        final double longitude = mLocation.getLongitude();
 
-        Intent serviceIntent = new Intent(this, AppService.class);
-        serviceIntent.putExtra(inputExtra, latitude + longitude);
-
-        ContextCompat.startForegroundService(this, serviceIntent);
-    }
-
-    public void stopService() {
-        Intent serviceIntent = new Intent(this, AppService.class);
-
-        stopService(serviceIntent);
-    }
-
-    private Runnable mGPSRunnable = new Runnable() {
-        @Override
-        public void run() {
-            final double latitude = mLocation.getLatitude();
-            final double longitude = mLocation.getLongitude();
-
-            //Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
-            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
-
-            mHandler.postDelayed(this, 10000);
-
-            saveGPSData();
-
-        }
-    };
-
-    public void startGPS() {
-        mGPSRunnable.run();
-    }
-
-    public void stopGPS() {
-        mHandler.removeCallbacks(mGPSRunnable);
-    }
-
-    private final Runnable mSensorsRunnable = new Runnable() {
-        @Override
-        public void run() {
-            IsDataRequested = true;
-            mHandler.postDelayed(this, 5000);
-        }
-    };
-
-    public void startSensors() {
-        mSensorsRunnable.run();
-    }
-
-//    public void stopSensors() {
-//        mHandler.removeCallbacks(mSensorsRunnable);
-//    }
-
-    public void saveSensorData(SensorEvent v) {
-        float Acc_X = v.values[0];
-        float Acc_Y = v.values[1];
-        float Acc_Z = v.values[2];
-
-        float Gyro_X = v.values[0];
-        float Gyro_Y = v.values[1];
-        float Gyro_Z = v.values[2];
-
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
-        Date today = new Date();
-        String dateToStr = format.format(today);
-
-        String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
-        FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
-    }
-
-    public void saveGPSData() {
-        final double latitude = mLocation.getLatitude();
-        final double longitude = mLocation.getLongitude();
-
-        SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
-        Date today = new Date();
-        String dateToStr = format.format(today);
-
-        String gpsData = dateToStr+","+latitude+","+longitude;
-        FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
-    }
 
     @Override
     protected void onPause() {
@@ -341,11 +251,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d("onStop", "onStop");
+        Log.d("onStop", "zipped files");
 
-        String zipName = new Date().getTime() + ".zip";
+        String zipName = currentDatetime + ".zip";
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
-            //new FileSender().execute(zipPath, zipName);
+            // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
+            new FileSender().execute(zipPath, zipName);
         }
     }
 
@@ -355,13 +266,41 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Log.d("onDestroy", "onDestroy");
     }
 
+    public void saveSelfReportData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putBoolean(SWITCH_WALK, switchWalk.isChecked());
+        editor.putBoolean(SWITCH_BIKE, switchBike.isChecked());
+        editor.putBoolean(SWITCH_TRAIN_BUS, switchTrainBus.isChecked());
+        editor.putBoolean(SWITCH_CAR, switchCar.isChecked());
+
+        editor.apply();
+    }
+
+    public void loadSelfReportData() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        switchWalkOnOff = sharedPreferences.getBoolean(SWITCH_WALK, false);
+        switchBikeOnOff = sharedPreferences.getBoolean(SWITCH_BIKE, false);
+        switchTrainBusOnOff = sharedPreferences.getBoolean(SWITCH_TRAIN_BUS, false);
+        switchCarOnOff = sharedPreferences.getBoolean(SWITCH_CAR, false);
+
+    }
+
+    public void updateViews() {
+        switchWalk.setChecked(switchWalkOnOff);
+        switchBike.setChecked(switchBikeOnOff);
+        switchTrainBus.setChecked(switchTrainBusOnOff);
+        switchCar.setChecked(switchCarOnOff);
+    }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // TODO Auto-generated method stub
     }
 
     // Obtain the sensor data from the phone
-    boolean IsDataRequested = false;
     @Override
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
@@ -392,51 +331,107 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    public void saveSelfReportData() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        editor.putBoolean(SWITCH_WALK, switchWalk.isChecked());
-        editor.putBoolean(SWITCH_BIKE, switchBike.isChecked());
-        editor.putBoolean(SWITCH_TRAIN_BUS, switchTrainBus.isChecked());
-        editor.putBoolean(SWITCH_CAR, switchCar.isChecked());
-
-        editor.apply();
+    public void startService() {
+        Intent serviceIntent = new Intent(this, AppService.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
     }
 
-    public void loadSelfReportData() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-
-        switchWalkOnOff = sharedPreferences.getBoolean(SWITCH_WALK, false);
-        switchBikeOnOff = sharedPreferences.getBoolean(SWITCH_BIKE, false);
-        switchTrainBusOnOff = sharedPreferences.getBoolean(SWITCH_TRAIN_BUS, false);
-        switchCarOnOff = sharedPreferences.getBoolean(SWITCH_CAR, false);
-
+    public void stopService() {
+        Intent serviceIntent = new Intent(this, AppService.class);
+        stopService(serviceIntent);
     }
 
-    public void updateViews() {
+    private Runnable mGPSRunnable = new Runnable() {
+        @Override
+        public void run() {
+            final double latitude = mLocation.getLatitude();
+            final double longitude = mLocation.getLongitude();
+            //Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
+            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
 
-        switchWalk.setChecked(switchWalkOnOff);
-        switchBike.setChecked(switchBikeOnOff);
-        switchTrainBus.setChecked(switchTrainBusOnOff);
-        switchCar.setChecked(switchCarOnOff);
+            mHandler.postDelayed(this, 10000);
+            saveGPSData();
+        }
+    };
+
+    public void startGPS() {
+        mGPSRunnable.run();
+    }
+
+    public void stopGPS() {
+        mHandler.removeCallbacks(mGPSRunnable);
+    }
+
+    private final Runnable mSensorsRunnable = new Runnable() {
+        @Override
+        public void run() {
+            IsDataRequested = true;
+            mHandler.postDelayed(this, 5000);
+        }
+    };
+
+    public void startSensors() {
+        mSensorsRunnable.run();
+    }
+
+    public void stopSensors() {
+        mHandler.removeCallbacks(mSensorsRunnable);
+    }
+
+    public void saveSensorData(SensorEvent v) {
+        float Acc_X = v.values[0];
+        float Acc_Y = v.values[1];
+        float Acc_Z = v.values[2];
+
+        float Gyro_X = v.values[0];
+        float Gyro_Y = v.values[1];
+        float Gyro_Z = v.values[2];
+
+        Date today = new Date();
+        String dateToStr = format.format(today);
+
+        String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
+        FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
+    }
+
+    public void saveGPSData() {
+        final double latitude = mLocation.getLatitude();
+        final double longitude = mLocation.getLongitude();
+
+        Date today = new Date();
+        String dateToStr = format.format(today);
+
+        String gpsData = dateToStr+","+latitude+","+longitude;
+        FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
     }
 
     // Button that sends the sensor data when clicked
     public void startEverything(View v) {
-        IsDataRequested = !IsDataRequested;
+        // Create folders (if they don't exist already)
+        String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
+        String gpsNameList = "Time, Latitude, Longitude";
+        String selfreportNameList = "Time, Transportation Mode, Status";
+        FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
+        FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
+        FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
+
+        IsDataRequested = true;
         startSensors();
         startGPS();
+        startService();
         Log.d("Sensors", "Sensors Button Pressed");
-        Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
     }
 
     boolean filesZipped = false;
     public void stopEverything(View v) {
-        SM.unregisterListener(MainActivity.this);
+        IsDataRequested = false;
+//        SM.unregisterListener(MainActivity.this);
         stopGPS();
+        stopSensors();
         stopService();
-        Toast.makeText(MainActivity.this, "Sensors stopped and zipped", Toast.LENGTH_SHORT).show();
+        Log.d("Sensors", "Sensors stopped");
+//        Toast.makeText(MainActivity.this, "Sensors stopped and zipped", Toast.LENGTH_SHORT).show();
     }
 
 }
