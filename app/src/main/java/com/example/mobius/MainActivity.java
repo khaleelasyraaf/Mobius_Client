@@ -257,6 +257,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
             new FileSender().execute(zipPath, zipName);
+            // delete Files in data Folder (they just got zipped
+            java.io.File files = new java.io.File(dataPath);
+            java.io.File[] fileList = files.listFiles();
+            for (java.io.File file : fileList) {
+                file.delete();
+            }
+            Log.d("Delete", "Data Files deleted");
         }
     }
 
