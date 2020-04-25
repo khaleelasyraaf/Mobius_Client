@@ -99,8 +99,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         // Register sensor listener
-        SM.registerListener(MainActivity.this, myAccelerometer, 1000000000); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
-        SM.registerListener(MainActivity.this, myGyroscope, 1000000000);
+        SM.registerListener(MainActivity.this, myAccelerometer, SensorManager.SENSOR_DELAY_FASTEST); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
+        SM.registerListener(MainActivity.this, myGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
 
         mLocation = new SimpleLocation(this);
         mLocation.setBlurRadius(5000);
@@ -366,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         @Override
         public void run() {
             IsDataRequested = true;
-            mHandler.postDelayed(this, 5000);
+            mHandler.postDelayed(this, 17);
         }
     };
 
