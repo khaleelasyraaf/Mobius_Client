@@ -27,7 +27,7 @@ public class AppService extends Service {
                 .setContentTitle("Mobius is running")
                 .setContentText("Nothing to worry about")
                 .setSmallIcon(R.drawable.ic_android)
-                .setContentIntent(pendingIntent)
+                //.setContentIntent(pendingIntent)
                 .build();
 
         startForeground(1, notification);

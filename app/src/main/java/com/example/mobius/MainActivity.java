@@ -2,7 +2,9 @@ package com.example.mobius;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -19,26 +21,45 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
+
+import static android.hardware.SensorManager.SENSOR_DELAY_GAME;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     // UI controls
-    private Button myStartEverythingBtn, myStopEverythingBtn, myStartServiceBtn, myStopServiceBtn;
+    private Button myStartEverythingBtn, myStopEverythingBtn, myAddIdBtn;
+    private ToggleButton myStartStopToggle;
+
+    private TextView myTextID;
+    private EditText myEditID;
 
     private Switch switchWalk, switchBike, switchTrainBus, switchCar;
     private ImageView walkIcon, bikeIcon, trainIcon, busIcon, carIcon;
 
     public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String TEXT = "text";
+
+    public static final String SWITCH_WALK = "switchWalk";
+    public static final String SWITCH_BIKE = "switchBike";
+    public static final String SWITCH_TRAIN_BUS = "switchTrainBus";
+    public static final String SWITCH_CAR = "switchCar";
+
+    public static final String TOGGLE_START_STOP = "toggleStartStop";
 
     private SensorManager SM;
     Sensor myAccelerometer, myGyroscope;
@@ -48,20 +69,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SimpleLocation mLocation;
 
-    public static final String SWITCH_WALK = "switchWalk";
-    public static final String SWITCH_BIKE = "switchBike";
-    public static final String SWITCH_TRAIN_BUS = "switchTrainBus";
-    public static final String SWITCH_CAR = "switchCar";
+    private Boolean switchWalkOnOff, switchBikeOnOff, switchTrainBusOnOff, switchCarOnOff,
+            toggleStartStopOnOff;
+    private String text;
 
-    private Boolean switchWalkOnOff, switchBikeOnOff, switchTrainBusOnOff, switchCarOnOff;
     boolean IsDataRequested = false;
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     Date today = new Date();
     String currentDatetime = format.format(today);
+
+//    String nameID = myTextID.getText().toString();
     String FILENAME1 = currentDatetime + "_sensors.csv";
     String FILENAME2 = currentDatetime + "_gps.csv";
     String FILENAME3 = currentDatetime + "_selfreport.csv";
+
+    boolean isIDgiven = false;
 
     private String SDPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String dataPath = SDPath + "/Mobius/data/";
@@ -73,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("onCreate", "onCreate");
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
@@ -98,9 +122,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Gyroscope sensor
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-        // Register sensor listener
-        SM.registerListener(MainActivity.this, myAccelerometer, SensorManager.SENSOR_DELAY_FASTEST); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
-        SM.registerListener(MainActivity.this, myGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
 
         mLocation = new SimpleLocation(this);
         mLocation.setBlurRadius(5000);
@@ -115,6 +136,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //UI widgets
         myStartEverythingBtn = (Button) findViewById(R.id.startEverythingBtn);
         myStopEverythingBtn = (Button) findViewById(R.id.stopEverythingBtn);
+        myStartStopToggle = (ToggleButton)findViewById(R.id.toggleStartStopBtn);
+        myAddIdBtn = (Button) findViewById(R.id.buttonAddID);
+
+        myTextID = (TextView) findViewById(R.id.textID);
+        myEditID = (EditText) findViewById(R.id.editID);
 
         switchWalk = (Switch)findViewById(R.id.switchButtonWalk);
         switchBike = (Switch)findViewById(R.id.switchButtonBike);
@@ -128,6 +154,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         carIcon = (ImageView)findViewById(R.id.carIcon);
 
         //endregion
+
+        myStartStopToggle.setOnClickListener(myStartStopClickHandler);
+
         //region Switches
 
         switchWalk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -159,9 +188,50 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         //endregion
-        loadSelfReportData();
-        updateViews();
+
+        loadTextView();
+        updateTextView();
     }
+
+    public void addID(View v) {
+        String nameID = "ID_" + myEditID.getText();
+
+        myTextID.setText(nameID);
+        myEditID.getText().clear();
+        hideKeyboard(v);
+        saveTextView();
+
+        FILENAME1 = nameID + "_" + FILENAME1;
+        FILENAME2 = nameID + "_" + FILENAME2;
+        FILENAME3 = nameID + "_" + FILENAME3;
+
+        isIDgiven = true;
+    }
+
+    private View.OnClickListener myStartStopClickHandler = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (myStartStopToggle.isChecked())
+            {
+                SharedPreferences.Editor editor = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE).edit();
+                editor.putBoolean(TOGGLE_START_STOP, true);
+                editor.apply();
+
+                startEverything(v);
+                saveToggle();
+            }
+            else
+            {
+                SharedPreferences.Editor editor = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE).edit();
+                editor.putBoolean(TOGGLE_START_STOP, false);
+                editor.apply();
+
+                stopEverything(v);
+                saveToggle();
+            }
+        }
+    };
+
 
     private void changeSliders(boolean isChecked, String mode){
         Date today = new Date();
@@ -223,10 +293,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Log.d("Transport Mode", mode + " " + isChecked);
         String walkData = dateToStr + ", " + mode + ", " + isChecked;
         FileHelper.saveToFile(dataPath, walkData, FILENAME3);
-        saveSelfReportData();
+        saveSelfReportSwitches();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("onStart", "onStart");
+        Log.d("ID", myTextID.getText().toString());
 
+        // Checks textView for user ID
+        isIDgiven = !myTextID.getText().toString().equals("");
+        Log.d("ID", "" + isIDgiven);
+
+    }
 
     @Override
     protected void onPause() {
@@ -238,16 +318,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         Log.d("onResume", "onResume");
+
+        loadSelfReportSwitches();
+        loadToggle();
+        updateViews();
     }
 
 //    Disable back button to avoid onStop() and onDestroy()
-//    @SuppressLint("MissingSuperCall")
-//    @Override
-//    public void onBackPressed()
-//    {
-//         super.onBackPressed();
-//    }
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed()
+    {
+         //super.onBackPressed();
+    }
 
+    boolean filesZipped = false;
     @Override
     protected void onStop() {
         super.onStop();
@@ -256,7 +341,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         String zipName = currentDatetime + ".zip";
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
-            new FileSender().execute(zipPath, zipName);
+            //new FileSender().execute(zipPath, zipName);
             // delete Files in data Folder (they just got zipped
             java.io.File files = new java.io.File(dataPath);
             java.io.File[] fileList = files.listFiles();
@@ -273,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Log.d("onDestroy", "onDestroy");
     }
 
-    public void saveSelfReportData() {
+    public void saveSelfReportSwitches() {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
@@ -285,7 +370,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         editor.apply();
     }
 
-    public void loadSelfReportData() {
+    public void loadSelfReportSwitches() {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
 
         switchWalkOnOff = sharedPreferences.getBoolean(SWITCH_WALK, false);
@@ -295,11 +380,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    public void saveToggle() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putBoolean(TOGGLE_START_STOP, myStartStopToggle.isChecked());
+
+        editor.apply();
+    }
+
+    public void loadToggle() {
+        SharedPreferences sharedPrefs = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        myStartStopToggle.setChecked(sharedPrefs.getBoolean(TOGGLE_START_STOP, false));
+    }
+
+    public void saveTextView() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString(TEXT, myTextID.getText().toString());
+
+        editor.apply();
+    }
+
+    public void loadTextView() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        text = sharedPreferences.getString(TEXT, "");
+    }
+
     public void updateViews() {
         switchWalk.setChecked(switchWalkOnOff);
         switchBike.setChecked(switchBikeOnOff);
         switchTrainBus.setChecked(switchTrainBusOnOff);
         switchCar.setChecked(switchCarOnOff);
+
+        //myStartStopToggle.setChecked(toggleStartStopOnOff);
+    }
+
+    public void updateTextView() {
+        myTextID.setText(text);
+    }
+
+    // Remove keyboard on screen touch (anywhere else besides keyboard)
+    public void hideKeyboard(View kb) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(kb.getWindowToken(), 0);
     }
 
     @Override
@@ -414,29 +539,59 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // Button that sends the sensor data when clicked
     public void startEverything(View v) {
-        // Create folders (if they don't exist already)
-        String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
-        String gpsNameList = "Time, Latitude, Longitude";
-        String selfreportNameList = "Time, Transportation Mode, Status";
-        FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
-        FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
-        FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
 
-        IsDataRequested = true;
-        startSensors();
-        startGPS();
-        startService();
-        Log.d("Sensors", "Sensors Button Pressed");
+//        String nameID = myTextID.getText().toString() + "_";
+//        String FILENAME1 = nameID + currentDatetime + "_sensors.csv";
+//        String FILENAME2 = nameID + currentDatetime + "_gps.csv";
+//        String FILENAME3 = nameID + currentDatetime + "_selfreport.csv";
+
+        if (isIDgiven) {
+            // Create folders (if they don't exist already)
+            File file = new File(dataPath+FILENAME1);
+
+            if(!file.exists()) {
+                String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
+                String gpsNameList = "Time, Latitude, Longitude";
+                String selfreportNameList = "Time, Transportation Mode, Status";
+                FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
+                FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
+                FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
+            }
+
+            // Register sensor listener
+            SM.registerListener(MainActivity.this, myAccelerometer, SENSOR_DELAY_GAME); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
+            SM.registerListener(MainActivity.this, myGyroscope, SENSOR_DELAY_GAME);
+
+            IsDataRequested = true;
+            startSensors();
+            startGPS();
+            startService();
+            //saveButtons();
+
+            myStartEverythingBtn.setEnabled(false);
+            myStopEverythingBtn.setEnabled(true);
+
+            Log.d("Sensors", "Sensors Button Pressed");
 //        Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Log.d("ID", "Not given");
+            Toast.makeText(MainActivity.this, "Please enter ID first", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    boolean filesZipped = false;
     public void stopEverything(View v) {
         IsDataRequested = false;
-//        SM.unregisterListener(MainActivity.this);
+        SM.unregisterListener(MainActivity.this);
         stopGPS();
-        stopSensors();
+//        stopSensors();
         stopService();
+        //saveButtons();
+
+        myStartEverythingBtn.setEnabled(true);
+        myStopEverythingBtn.setEnabled(false);
+
         Log.d("Sensors", "Sensors stopped");
 //        Toast.makeText(MainActivity.this, "Sensors stopped and zipped", Toast.LENGTH_SHORT).show();
     }
