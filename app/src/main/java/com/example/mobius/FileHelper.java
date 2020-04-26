@@ -15,14 +15,14 @@ import java.util.zip.ZipOutputStream;
 
 public class FileHelper {
     private static final int BUFFER_SIZE = 8192 ;//2048;
-    private static String TAG= FileHelper.class.getName().toString();
-    private static String parentPath ="";
+    private static String TAG = FileHelper.class.getName();
+    private static String parentPath = "";
 
 
     public static boolean zip(String sourcePath, String destinationPath, String destinationFileName, Boolean includeParentFolder)  {
         new File(destinationPath ).mkdirs();
         FileOutputStream fileOutputStream ;
-        ZipOutputStream zipOutputStream =  null;
+        ZipOutputStream zipOutputStream = null;
         try{
             if (!destinationPath.endsWith("/")) destinationPath+="/";
             String destination = destinationPath + destinationFileName;
@@ -32,6 +32,7 @@ public class FileHelper {
             fileOutputStream = new FileOutputStream(file);
             zipOutputStream =  new ZipOutputStream(new BufferedOutputStream(fileOutputStream));
 
+            // NOTE: parentPath is not used. What is it for?
             if (includeParentFolder)
                 parentPath=new File(sourcePath).getParent() + "/";
             else
@@ -54,13 +55,14 @@ public class FileHelper {
         return true;
     }
 
-    private static void zipFile(ZipOutputStream zipOutputStream, String sourcePath) throws  IOException{
+    private static void zipFile(ZipOutputStream zipOutputStream, String sourcePath) throws IOException{
 
         java.io.File files = new java.io.File(sourcePath);
         java.io.File[] fileList = files.listFiles();
 
-        String entryPath="";
+        String entryPath;
         BufferedInputStream input;
+        // zips the entire folder
         for (java.io.File file : fileList) {
             if (file.isDirectory()) {
                 zipFile(zipOutputStream, file.getPath());
@@ -68,13 +70,13 @@ public class FileHelper {
                 byte data[] = new byte[BUFFER_SIZE];
                 FileInputStream fileInputStream = new FileInputStream(file.getPath());
                 input = new BufferedInputStream(fileInputStream, BUFFER_SIZE);
-                entryPath=file.getAbsolutePath().replace( parentPath,"");
+                entryPath=file.getAbsolutePath().replace(parentPath,"");
 
                 ZipEntry entry = new ZipEntry(entryPath);
                 zipOutputStream.putNextEntry(entry);
 
                 int count;
-                while ((count = input.read(data, 0, BUFFER_SIZE)) != -1) {
+                while ((count = input.read(data,0, BUFFER_SIZE)) != -1) {
                     zipOutputStream.write(data, 0, count);
                 }
                 input.close();

@@ -99,8 +99,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         // Register sensor listener
-        SM.registerListener(MainActivity.this, myAccelerometer, 1000000000); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
-        SM.registerListener(MainActivity.this, myGyroscope, 1000000000);
+        SM.registerListener(MainActivity.this, myAccelerometer, SensorManager.SENSOR_DELAY_FASTEST); // SensorManager.SENSOR_DELAY_FASTEST , SENSOR_DELAY_GAME, SENSOR_DELAY_NORMAL
+        SM.registerListener(MainActivity.this, myGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
 
         mLocation = new SimpleLocation(this);
         mLocation.setBlurRadius(5000);
@@ -257,6 +257,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
             new FileSender().execute(zipPath, zipName);
+            // delete Files in data Folder (they just got zipped
+            java.io.File files = new java.io.File(dataPath);
+            java.io.File[] fileList = files.listFiles();
+            for (java.io.File file : fileList) {
+                file.delete();
+            }
+            Log.d("Delete", "Data Files deleted");
         }
     }
 
@@ -366,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         @Override
         public void run() {
             IsDataRequested = true;
-            mHandler.postDelayed(this, 5000);
+            mHandler.postDelayed(this, 17);
         }
     };
 
