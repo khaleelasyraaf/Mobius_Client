@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ImageView walkIcon, bikeIcon, trainIcon, busIcon, carIcon;
 
     public static final String SHARED_PREFS = "sharedPrefs";
-    public static final String TEXT = "text";
 
     public static final String SWITCH_WALK = "switchWalk";
     public static final String SWITCH_BIKE = "switchBike";
@@ -71,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private Boolean switchWalkOnOff, switchBikeOnOff, switchTrainBusOnOff, switchCarOnOff,
             toggleStartStopOnOff;
-    private String text;
 
     boolean IsDataRequested = false;
 
@@ -80,11 +78,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     String currentDatetime = format.format(today);
 
 //    String nameID = myTextID.getText().toString();
-    String FILENAME1 = currentDatetime + "_sensors.csv";
-    String FILENAME2 = currentDatetime + "_gps.csv";
-    String FILENAME3 = currentDatetime + "_selfreport.csv";
+    String FILENAME1;
+    String FILENAME2;
+    String FILENAME3;
 
-    boolean isIDgiven = false;
+    boolean isIDgiven;
 
     private String SDPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String dataPath = SDPath + "/Mobius/data/";
@@ -115,13 +113,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // Create sensor manager
         SM = (SensorManager)getSystemService(SENSOR_SERVICE);
-
         // Accelerometer sensor
         myAccelerometer = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
         // Gyroscope sensor
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
 
         mLocation = new SimpleLocation(this);
         mLocation.setBlurRadius(5000);
@@ -158,55 +153,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myStartStopToggle.setOnClickListener(myStartStopClickHandler);
 
         //region Switches
-
         switchWalk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 changeSliders(isChecked, "Walking");
             }
         });
-
         switchBike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 changeSliders(isChecked, "Biking");
             }
         });
-
         switchTrainBus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 changeSliders(isChecked, "Train/Bus");
             }
         });
-
         switchCar.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 changeSliders(isChecked, "Car");
             }
         });
-
         //endregion
 
-        loadTextView();
-        updateTextView();
+        FILENAME1 = currentDatetime + "_sensors.csv";
+        FILENAME2 = currentDatetime + "_gps.csv";
+        FILENAME3 = currentDatetime + "_selfreport.csv";
+
+        isIDgiven = false;
     }
 
-    public void addID(View v) {
-        String nameID = "ID_" + myEditID.getText();
-
-        myTextID.setText(nameID);
-        myEditID.getText().clear();
-        hideKeyboard(v);
-        saveTextView();
-
-        FILENAME1 = nameID + "_" + FILENAME1;
-        FILENAME2 = nameID + "_" + FILENAME2;
-        FILENAME3 = nameID + "_" + FILENAME3;
-
-        isIDgiven = true;
-    }
 
     private View.OnClickListener myStartStopClickHandler = new View.OnClickListener() {
         @Override
@@ -338,10 +317,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onStop();
         Log.d("onStop", "zipped files");
 
-        String zipName = currentDatetime + ".zip";
+        String zipName = "ID_" + myTextID.getText().toString() + "_" + currentDatetime + ".zip";
         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
             // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
-            //new FileSender().execute(zipPath, zipName);
+//            new FileSender().execute(zipPath, zipName, myTextID.getText().toString());
             // delete Files in data Folder (they just got zipped
             java.io.File files = new java.io.File(dataPath);
             java.io.File[] fileList = files.listFiles();
@@ -394,19 +373,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myStartStopToggle.setChecked(sharedPrefs.getBoolean(TOGGLE_START_STOP, false));
     }
 
-    public void saveTextView() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        editor.putString(TEXT, myTextID.getText().toString());
-
-        editor.apply();
-    }
-
-    public void loadTextView() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        text = sharedPreferences.getString(TEXT, "");
-    }
 
     public void updateViews() {
         switchWalk.setChecked(switchWalkOnOff);
@@ -415,10 +381,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switchCar.setChecked(switchCarOnOff);
 
         //myStartStopToggle.setChecked(toggleStartStopOnOff);
-    }
-
-    public void updateTextView() {
-        myTextID.setText(text);
     }
 
     // Remove keyboard on screen touch (anywhere else besides keyboard)
@@ -540,11 +502,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // Button that sends the sensor data when clicked
     public void startEverything(View v) {
 
-//        String nameID = myTextID.getText().toString() + "_";
-//        String FILENAME1 = nameID + currentDatetime + "_sensors.csv";
-//        String FILENAME2 = nameID + currentDatetime + "_gps.csv";
-//        String FILENAME3 = nameID + currentDatetime + "_selfreport.csv";
-
         if (isIDgiven) {
             // Create folders (if they don't exist already)
             File file = new File(dataPath+FILENAME1);
@@ -594,6 +551,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         Log.d("Sensors", "Sensors stopped");
 //        Toast.makeText(MainActivity.this, "Sensors stopped and zipped", Toast.LENGTH_SHORT).show();
+    }
+
+    public void addID(View v) {
+        // Remove white spaces
+        String nameID = "" + myEditID.getText().toString().replaceAll("\\s+", "");
+
+        myTextID.setText(nameID);
+        myEditID.getText().clear();
+        hideKeyboard(v);
+
+        FILENAME1 = "ID_" + nameID + "_" + FILENAME1;
+        FILENAME2 = "ID_" + nameID + "_" + FILENAME2;
+        FILENAME3 = "ID_" + nameID + "_" + FILENAME3;
+
+        isIDgiven = true;
     }
 
 }

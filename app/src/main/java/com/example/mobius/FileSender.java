@@ -22,7 +22,7 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
 
         String zipPath = params[0];
         String zipName = params[1];
-        // TODO put ip in env-variable
+        String api_key = params[2];
         String serverUrl = dotenv.get("SERVER-URL", "No-Server-URL");
         File file = new File(zipPath+zipName);
         RequestBody postBody = new MultipartBody.Builder()
@@ -37,7 +37,7 @@ public class FileSender extends AsyncTask<String, Boolean, Boolean> {
                 .url(serverUrl)
                 .post(postBody)
                 // TODO insert API-key here
-                .addHeader("API-key", dotenv.get("API-key", "<No-API-Key>"))
+                .addHeader("API-key", api_key)
                 .build();
 
         try {
