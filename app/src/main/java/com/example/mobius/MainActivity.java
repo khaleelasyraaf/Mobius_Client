@@ -225,19 +225,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             public void onClick(DialogInterface dialog, int which) {
                                 stopEverything();
                                 saveToggle();
+                                myUploadBtn.setEnabled(true);
                             }
                         });
                 builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         myStartStopToggle.setChecked(true);
+                        myUploadBtn.setEnabled(false);
                     }
                 });
 
                 AlertDialog dialog = builder.create();
                 dialog.show();
-
-                myUploadBtn.setEnabled(true);
             }
         }
     };
