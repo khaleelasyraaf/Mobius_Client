@@ -17,6 +17,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +25,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -43,7 +45,7 @@ import static android.hardware.SensorManager.SENSOR_DELAY_GAME;
 public class MainActivity extends AppCompatActivity implements SensorEventListener, DialogID.DialogIDListener {
 
     // UI controls
-    private Button myAddIdBtn, myConfirmIdBtn;
+    private Button myAddIdBtn, myUploadBtn;
     private ToggleButton myStartStopToggle;
 
     private TextView myTextID;
@@ -59,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public static final String SWITCH_CAR = "switchCar";
 
     public static final String TOGGLE_START_STOP = "toggleStartStop";
+
+    private Chronometer myChronometer;
+    private long pauseOffset;
+    private boolean chronometerRunning;
 
     private SensorManager SM;
     Sensor myAccelerometer, myGyroscope;
@@ -130,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //UI widgets
         myStartStopToggle = (ToggleButton)findViewById(R.id.toggleStartStopBtn);
         myAddIdBtn = (Button) findViewById(R.id.buttonAddID);
-        myConfirmIdBtn = (Button) findViewById(R.id.buttonConfirmID);
+        myUploadBtn = (Button) findViewById(R.id.buttonUpload);
 
         myTextID = (TextView) findViewById(R.id.textID);
 
@@ -144,6 +150,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         trainIcon = (ImageView)findViewById(R.id.trainIcon);
         busIcon = (ImageView)findViewById(R.id.busIcon);
         carIcon = (ImageView)findViewById(R.id.carIcon);
+
+        myChronometer = findViewById(R.id.chronometer);
 
         //endregion
 
@@ -181,6 +189,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         FILENAME3 = currentDatetime + "_selfreport.csv";
 
         isIDgiven = false;
+
+        myUploadBtn.setEnabled(false);
     }
 
 
@@ -196,6 +206,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 startEverything();
                 saveToggle();
+
+                myUploadBtn.setEnabled(false);
             }
             else
             {
@@ -224,6 +236,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 AlertDialog dialog = builder.create();
                 dialog.show();
+
+                myUploadBtn.setEnabled(true);
             }
         }
     };
@@ -333,20 +347,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d("onStop", "zipped files");
-
-        String zipName = "ID_" + myTextID.getText().toString() + "_" + currentDatetime + ".zip";
-        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
-            // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
-//            new FileSender().execute(zipPath, zipName, myTextID.getText().toString());
-            // delete Files in data Folder (they just got zipped
-            java.io.File files = new java.io.File(dataPath);
-            java.io.File[] fileList = files.listFiles();
-            for (java.io.File file : fileList) {
-                file.delete();
-            }
-            Log.d("Delete", "Data Files deleted");
-        }
+        Log.d("onStop", "onStop");
     }
 
     @Override
@@ -535,7 +536,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             startSensors();
             startGPS();
             startService();
-            //saveButtons();
+
+            startChronometer();
 
             Log.d("Sensors", "Sensors Button Pressed");
 //        Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
@@ -544,8 +546,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setCancelable(true);
-            builder.setTitle("ID confirmation needed");
-            builder.setMessage("Please key in and confirm your user ID");
+            builder.setTitle("ID needed");
+            builder.setMessage("Please key in your user ID");
             builder.setPositiveButton("Ok",
                     new DialogInterface.OnClickListener() {
                         @Override
@@ -565,12 +567,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         IsDataRequested = false;
         SM.unregisterListener(MainActivity.this);
         stopGPS();
-//        stopSensors();
         stopService();
-        //saveButtons();
+
+        pauseChronometer();
 
         Log.d("Sensors", "Sensors stopped");
-//        Toast.makeText(MainActivity.this, "Sensors stopped and zipped", Toast.LENGTH_SHORT).show();
+    }
+
+    public void startChronometer() {
+        if(!chronometerRunning) {
+            myChronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
+            myChronometer.start();
+            chronometerRunning = true;
+        }
+    }
+
+    public void pauseChronometer() {
+        if(chronometerRunning) {
+            myChronometer.stop();
+            pauseOffset = SystemClock.elapsedRealtime() - myChronometer.getBase();
+            chronometerRunning = false;
+        }
+    }
+
+    public void resetChronometer() {
+        myChronometer.setBase(SystemClock.elapsedRealtime());
+        pauseOffset = 0;
     }
 
     public void addID(View v) {
@@ -585,13 +607,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void applyTexts(String userID) {
         myTextID.setText(userID);
-    }
-
-    public void confirmID(View v) {
 
         isIDgiven = !myTextID.getText().toString().equals("");
 
         if (isIDgiven) {
+
             FILENAME1 = "ID_" + myTextID.getText().toString() + "_" + FILENAME1;
             FILENAME2 = "ID_" + myTextID.getText().toString() + "_" + FILENAME2;
             FILENAME3 = "ID_" + myTextID.getText().toString() + "_" + FILENAME3;
@@ -602,7 +622,37 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         else
         {
             Log.d("ID", "No ID given");
-            Toast.makeText(MainActivity.this, "No ID given", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void uploadFiles(View v) {
+        String zipName = "ID_" + myTextID.getText().toString() + "_" + currentDatetime + ".zip";
+        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
+            // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
+//            new FileSender().execute(zipPath, zipName, myTextID.getText().toString());
+            // delete Files in data Folder (they just got zipped
+            java.io.File files = new java.io.File(dataPath);
+            java.io.File[] fileList = files.listFiles();
+            for (java.io.File file : fileList) {
+                file.delete();
+            }
+            Log.d("Delete", "Data Files deleted");
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setCancelable(true);
+        builder.setMessage("Files have been successfully uploaded");
+        builder.setPositiveButton("Ok",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        resetChronometer();
+        myUploadBtn.setEnabled(false);
     }
 }

@@ -11,6 +11,15 @@
     android:focusableInTouchMode="true"
     tools:context=".MainActivity">
 
+    <Chronometer
+        android:id="@+id/chronometer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="127dp"
+        android:layout_marginTop="23dp"
+        android:textSize="30sp" />
 
     <ImageView
         android:id="@+id/walkIcon"
@@ -132,8 +141,8 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="159dp"
-        android:layout_marginTop="449dp"
+        android:layout_marginStart="109dp"
+        android:layout_marginTop="447dp"
         android:text="ToggleButton"
         android:textOff="Start"
         android:textOn="Stop" />
@@ -161,14 +170,14 @@
         android:text="+" />
 
     <Button
-        android:id="@+id/buttonConfirmID"
+        android:id="@+id/buttonUpload"
         android:layout_width="wrap_content"
-        android:layout_height="37dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="226dp"
-        android:layout_marginTop="66dp"
-        android:onClick="confirmID"
-        android:text="Confirm" />
+        android:layout_marginStart="215dp"
+        android:layout_marginTop="446dp"
+        android:onClick="uploadFiles"
+        android:text="Upload" />
 
 </RelativeLayout>
