@@ -3,6 +3,7 @@ package com.example.mobius;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -39,14 +40,13 @@ import java.util.Objects;
 import static android.hardware.SensorManager.SENSOR_DELAY_GAME;
 
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity implements SensorEventListener, DialogID.DialogIDListener {
 
     // UI controls
-    private Button myStartEverythingBtn, myStopEverythingBtn, myAddIdBtn;
+    private Button myAddIdBtn, myConfirmIdBtn;
     private ToggleButton myStartStopToggle;
 
     private TextView myTextID;
-    private EditText myEditID;
 
     private Switch switchWalk, switchBike, switchTrainBus, switchCar;
     private ImageView walkIcon, bikeIcon, trainIcon, busIcon, carIcon;
@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Date today = new Date();
     String currentDatetime = format.format(today);
 
-//    String nameID = myTextID.getText().toString();
     String FILENAME1;
     String FILENAME2;
     String FILENAME3;
@@ -129,13 +128,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //region Widgets
 
         //UI widgets
-        myStartEverythingBtn = (Button) findViewById(R.id.startEverythingBtn);
-        myStopEverythingBtn = (Button) findViewById(R.id.stopEverythingBtn);
         myStartStopToggle = (ToggleButton)findViewById(R.id.toggleStartStopBtn);
         myAddIdBtn = (Button) findViewById(R.id.buttonAddID);
+        myConfirmIdBtn = (Button) findViewById(R.id.buttonConfirmID);
 
         myTextID = (TextView) findViewById(R.id.textID);
-        myEditID = (EditText) findViewById(R.id.editID);
 
         switchWalk = (Switch)findViewById(R.id.switchButtonWalk);
         switchBike = (Switch)findViewById(R.id.switchButtonBike);
@@ -190,13 +187,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private View.OnClickListener myStartStopClickHandler = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+
             if (myStartStopToggle.isChecked())
             {
                 SharedPreferences.Editor editor = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE).edit();
                 editor.putBoolean(TOGGLE_START_STOP, true);
                 editor.apply();
 
-                startEverything(v);
+                startEverything();
                 saveToggle();
             }
             else
@@ -205,8 +203,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 editor.putBoolean(TOGGLE_START_STOP, false);
                 editor.apply();
 
-                stopEverything(v);
-                saveToggle();
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setCancelable(true);
+                builder.setTitle("Are you sure?");
+                builder.setMessage("Do you want to stop the sensors?");
+                builder.setPositiveButton("Confirm",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                stopEverything();
+                                saveToggle();
+                            }
+                        });
+                builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        myStartStopToggle.setChecked(true);
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         }
     };
@@ -291,6 +308,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onPause() {
         super.onPause();
         Log.d("onPause", "onPause");
+
     }
 
     @Override
@@ -381,12 +399,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switchCar.setChecked(switchCarOnOff);
 
         //myStartStopToggle.setChecked(toggleStartStopOnOff);
-    }
-
-    // Remove keyboard on screen touch (anywhere else besides keyboard)
-    public void hideKeyboard(View kb) {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(kb.getWindowToken(), 0);
     }
 
     @Override
@@ -500,7 +512,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     // Button that sends the sensor data when clicked
-    public void startEverything(View v) {
+    public void startEverything() {
 
         if (isIDgiven) {
             // Create folders (if they don't exist already)
@@ -525,20 +537,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             startService();
             //saveButtons();
 
-            myStartEverythingBtn.setEnabled(false);
-            myStopEverythingBtn.setEnabled(true);
-
             Log.d("Sensors", "Sensors Button Pressed");
 //        Toast.makeText(MainActivity.this, "Sensors activated", Toast.LENGTH_SHORT).show();
         }
         else
         {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setCancelable(true);
+            builder.setTitle("ID confirmation needed");
+            builder.setMessage("Please key in and confirm your user ID");
+            builder.setPositiveButton("Ok",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+            myStartStopToggle.setChecked(false);
             Log.d("ID", "Not given");
-            Toast.makeText(MainActivity.this, "Please enter ID first", Toast.LENGTH_SHORT).show();
         }
     }
 
-    public void stopEverything(View v) {
+    public void stopEverything() {
         IsDataRequested = false;
         SM.unregisterListener(MainActivity.this);
         stopGPS();
@@ -546,26 +569,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopService();
         //saveButtons();
 
-        myStartEverythingBtn.setEnabled(true);
-        myStopEverythingBtn.setEnabled(false);
-
         Log.d("Sensors", "Sensors stopped");
 //        Toast.makeText(MainActivity.this, "Sensors stopped and zipped", Toast.LENGTH_SHORT).show();
     }
 
     public void addID(View v) {
-        // Remove white spaces
-        String nameID = "" + myEditID.getText().toString().replaceAll("\\s+", "");
-
-        myTextID.setText(nameID);
-        myEditID.getText().clear();
-        hideKeyboard(v);
-
-        FILENAME1 = "ID_" + nameID + "_" + FILENAME1;
-        FILENAME2 = "ID_" + nameID + "_" + FILENAME2;
-        FILENAME3 = "ID_" + nameID + "_" + FILENAME3;
-
-        isIDgiven = true;
+        openDialog();
     }
 
+    public void openDialog() {
+        DialogID dialogID = new DialogID();
+        dialogID.show(getSupportFragmentManager(), "id dialog");
+    }
+
+    @Override
+    public void applyTexts(String userID) {
+        myTextID.setText(userID);
+    }
+
+    public void confirmID(View v) {
+
+        isIDgiven = !myTextID.getText().toString().equals("");
+
+        if (isIDgiven) {
+            FILENAME1 = "ID_" + myTextID.getText().toString() + "_" + FILENAME1;
+            FILENAME2 = "ID_" + myTextID.getText().toString() + "_" + FILENAME2;
+            FILENAME3 = "ID_" + myTextID.getText().toString() + "_" + FILENAME3;
+
+            Log.d("ID", "" + myTextID.getText().toString() + "_" + isIDgiven);
+            Toast.makeText(MainActivity.this, "Confirmed", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Log.d("ID", "No ID given");
+            Toast.makeText(MainActivity.this, "No ID given", Toast.LENGTH_SHORT).show();
+        }
+    }
 }

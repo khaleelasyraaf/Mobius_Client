@@ -7,10 +7,10 @@
     android:layout_height="match_parent"
     android:background="#B6B6B8"
     android:orientation="vertical"
-    android:onClick="hideKeyboard"
     android:focusable="true"
     android:focusableInTouchMode="true"
     tools:context=".MainActivity">
+
 
     <ImageView
         android:id="@+id/walkIcon"
@@ -20,23 +20,22 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="false"
-        android:layout_marginStart="110dp"
-        android:layout_marginLeft="110dp"
-        android:layout_marginTop="123dp"
+        android:layout_marginStart="107dp"
+        android:layout_marginLeft="107dp"
+        android:layout_marginTop="107dp"
         android:src="@drawable/ic_launcher_walk_icon" />
 
-    <Switch
-        android:id="@+id/switchButtonWalk"
+    <ImageView
+        android:id="@+id/bikeIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="72dp"
-        android:layout_marginLeft="72dp"
-        android:layout_marginTop="148dp"
-        android:layout_toEndOf="@+id/walkIcon"
-        android:layout_toRightOf="@+id/walkIcon"
-        android:textOff="Off"
-        android:textOn="On" />
+        android:layout_marginStart="105dp"
+        android:layout_marginLeft="105dp"
+        android:layout_marginTop="183dp"
+        android:src="@drawable/ic_launcher_bike_icon" />
 
     <Switch
         android:id="@+id/switchButtonBike"
@@ -45,7 +44,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="74dp"
         android:layout_marginLeft="74dp"
-        android:layout_marginTop="223dp"
+        android:layout_marginTop="207dp"
         android:layout_toEndOf="@+id/bikeIcon"
         android:layout_toRightOf="@+id/bikeIcon"
         android:textOff="Off"
@@ -58,9 +57,9 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="76dp"
-        android:layout_marginLeft="76dp"
-        android:layout_marginTop="279dp"
+        android:layout_marginStart="73dp"
+        android:layout_marginLeft="73dp"
+        android:layout_marginTop="263dp"
         android:src="@drawable/ic_launcher_train_icon" />
 
     <ImageView
@@ -70,7 +69,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="1dp"
         android:layout_marginLeft="1dp"
-        android:layout_marginTop="279dp"
+        android:layout_marginTop="263dp"
         android:layout_toEndOf="@+id/trainIcon"
         android:layout_toRightOf="@+id/trainIcon"
         android:src="@drawable/ic_launcher_bus_icon" />
@@ -82,7 +81,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="33dp"
         android:layout_marginLeft="33dp"
-        android:layout_marginTop="302dp"
+        android:layout_marginTop="286dp"
         android:layout_toEndOf="@+id/busIcon"
         android:layout_toRightOf="@+id/busIcon"
         android:textOff="Off"
@@ -95,9 +94,9 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="106dp"
-        android:layout_marginLeft="106dp"
-        android:layout_marginTop="359dp"
+        android:layout_marginStart="103dp"
+        android:layout_marginLeft="103dp"
+        android:layout_marginTop="343dp"
         android:src="@drawable/ic_launcher_car_icon" />
 
     <Switch
@@ -107,51 +106,24 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="76dp"
         android:layout_marginLeft="76dp"
-        android:layout_marginTop="381dp"
+        android:layout_marginTop="365dp"
         android:layout_toEndOf="@+id/carIcon"
         android:layout_toRightOf="@+id/carIcon"
         android:textOff="Off"
         android:textOn="On" />
 
-    <Button
-        android:id="@+id/startEverythingBtn"
+    <Switch
+        android:id="@+id/switchButtonWalk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="79dp"
-        android:layout_marginLeft="79dp"
-        android:layout_marginTop="448dp"
-        android:onClick="startEverything"
-        android:text="Acc"
-        tools:layout_editor_absoluteX="161dp"
-        tools:layout_editor_absoluteY="413dp" />
-
-    <Button
-        android:id="@+id/stopEverythingBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="238dp"
-        android:layout_marginLeft="238dp"
-        android:layout_marginTop="448dp"
-        android:onClick="stopEverything"
-        android:text="Cancel" />
-
-    <ImageView
-        android:id="@+id/bikeIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="108dp"
-        android:layout_marginLeft="108dp"
-        android:layout_marginTop="199dp"
-        android:src="@drawable/ic_launcher_bike_icon" />
+        android:layout_marginStart="72dp"
+        android:layout_marginLeft="72dp"
+        android:layout_marginTop="132dp"
+        android:layout_toEndOf="@+id/walkIcon"
+        android:layout_toRightOf="@+id/walkIcon"
+        android:textOff="Off"
+        android:textOn="On" />
 
     <ToggleButton
         android:id="@+id/toggleStartStopBtn"
@@ -160,24 +132,11 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="23dp"
-        android:layout_marginTop="190dp"
-        android:onClick="toggleStartStop"
+        android:layout_marginStart="159dp"
+        android:layout_marginTop="449dp"
         android:text="ToggleButton"
         android:textOff="Start"
         android:textOn="Stop" />
-
-    <EditText
-        android:id="@+id/editID"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="31dp"
-        android:layout_marginTop="63dp"
-        android:ems="10"
-        android:hint="Your ID here"
-        android:inputType="textPersonName" />
 
     <TextView
         android:id="@+id/textID"
@@ -187,6 +146,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="32dp"
         android:layout_marginTop="33dp"
+        android:gravity="top|center_horizontal"
         android:text=""/>
 
     <Button
@@ -196,8 +156,19 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="242dp"
-        android:layout_marginTop="70dp"
-        android:text="+"
-        android:onClick="addID" />
+        android:layout_marginTop="24dp"
+        android:onClick="addID"
+        android:text="+" />
+
+    <Button
+        android:id="@+id/buttonConfirmID"
+        android:layout_width="wrap_content"
+        android:layout_height="37dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="226dp"
+        android:layout_marginTop="66dp"
+        android:onClick="confirmID"
+        android:text="Confirm" />
 
 </RelativeLayout>
