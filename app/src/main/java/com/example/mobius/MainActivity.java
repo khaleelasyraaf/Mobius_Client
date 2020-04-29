@@ -191,6 +191,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         isIDgiven = false;
 
         myUploadBtn.setEnabled(false);
+
+        switchWalk.setEnabled(false);
+        switchBike.setEnabled(false);
+        switchTrainBus.setEnabled(false);
+        switchCar.setEnabled(false);
     }
 
 
@@ -533,6 +538,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             SM.registerListener(MainActivity.this, myGyroscope, SENSOR_DELAY_GAME);
 
             IsDataRequested = true;
+
+            switchWalk.setEnabled(true);
+            switchBike.setEnabled(true);
+            switchTrainBus.setEnabled(true);
+            switchCar.setEnabled(true);
+
             startSensors();
             startGPS();
             startService();
@@ -547,7 +558,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setCancelable(true);
             builder.setTitle("ID needed");
-            builder.setMessage("Please key in your user ID");
+            builder.setMessage("Please key in your user ID.");
             builder.setPositiveButton("Ok",
                     new DialogInterface.OnClickListener() {
                         @Override
@@ -617,7 +628,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             FILENAME3 = "ID_" + myTextID.getText().toString() + "_" + FILENAME3;
 
             Log.d("ID", "" + myTextID.getText().toString() + "_" + isIDgiven);
-            Toast.makeText(MainActivity.this, "Confirmed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Confirmed.", Toast.LENGTH_SHORT).show();
         }
         else
         {
@@ -626,23 +637,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void uploadFiles(View v) {
-        String zipName = "ID_" + myTextID.getText().toString() + "_" + currentDatetime + ".zip";
-        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
-            // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
-//            new FileSender().execute(zipPath, zipName, myTextID.getText().toString());
-            // delete Files in data Folder (they just got zipped
-            java.io.File files = new java.io.File(dataPath);
-            java.io.File[] fileList = files.listFiles();
-            for (java.io.File file : fileList) {
-                file.delete();
-            }
-            Log.d("Delete", "Data Files deleted");
-        }
-
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(true);
-        builder.setMessage("Files have been successfully uploaded");
-        builder.setPositiveButton("Ok",
+        builder.setTitle("Done for today?");
+        builder.setMessage("The files will be uploaded.");
+        builder.setPositiveButton("Yes",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String zipName = "ID_" + myTextID.getText().toString() + "_" + currentDatetime + ".zip";
+                        if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
+                            // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
+//                          new FileSender().execute(zipPath, zipName, myTextID.getText().toString());
+                            // delete Files in data Folder (they just got zipped)
+                            java.io.File files = new java.io.File(dataPath);
+                            java.io.File[] fileList = files.listFiles();
+                            for (java.io.File file : fileList) {
+                                file.delete();
+                            }
+                            Log.d("Delete", "Data Files deleted");
+                        }
+                        resetChronometer();
+                        myUploadBtn.setEnabled(false);
+                        Toast.makeText(MainActivity.this, "Files have been uploaded.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+        builder.setNegativeButton("No",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -651,8 +671,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         AlertDialog dialog = builder.create();
         dialog.show();
-
-        resetChronometer();
-        myUploadBtn.setEnabled(false);
     }
 }
