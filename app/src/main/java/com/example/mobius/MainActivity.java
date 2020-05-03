@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         mLocation = new SimpleLocation(this);
-        mLocation.setBlurRadius(5000);
+        mLocation.setBlurRadius(5);
 
         if (!mLocation.hasLocationEnabled()) {
             // ask the user to enable location access
