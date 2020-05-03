@@ -17,6 +17,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -33,6 +34,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import android.os.PowerManager;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -89,11 +91,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     boolean isIDgiven;
 
+    boolean filesZipped = false;
+
     private String SDPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String dataPath = SDPath + "/Mobius/data/";
     private String zipPath = SDPath + "/Mobius/zip/";
     private String unzipPath = SDPath + "/Mobius/unzip/";
 
+    private static final String wakeLockTag = MainActivity.class.getSimpleName();
+    private PowerManager.WakeLock wakeLock;
 
     /** Called when the activity is created. */
     @Override
@@ -184,6 +190,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
         //endregion
 
+        final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, wakeLockTag);
+
         FILENAME1 = currentDatetime + "_sensors.csv";
         FILENAME2 = currentDatetime + "_gps.csv";
         FILENAME3 = currentDatetime + "_selfreport.csv";
@@ -210,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 editor.apply();
 
                 startEverything();
+                wakeLock.acquire();
                 saveToggle();
 
                 myUploadBtn.setEnabled(false);
@@ -348,7 +358,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
          //super.onBackPressed();
     }
 
-    boolean filesZipped = false;
     @Override
     protected void onStop() {
         super.onStop();
@@ -544,9 +553,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             switchTrainBus.setEnabled(true);
             switchCar.setEnabled(true);
 
+            startService();
             startSensors();
             startGPS();
-            startService();
 
             startChronometer();
 
@@ -575,10 +584,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void stopEverything() {
+        stopService();
         IsDataRequested = false;
         SM.unregisterListener(MainActivity.this);
         stopGPS();
-        stopService();
 
         pauseChronometer();
 
@@ -657,6 +666,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             }
                             Log.d("Delete", "Data Files deleted");
                         }
+                        wakeLock.release();
                         resetChronometer();
                         myUploadBtn.setEnabled(false);
                         Toast.makeText(MainActivity.this, "Files have been uploaded.", Toast.LENGTH_SHORT).show();
