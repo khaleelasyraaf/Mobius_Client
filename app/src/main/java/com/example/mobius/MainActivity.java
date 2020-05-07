@@ -531,9 +531,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             File file = new File(dataPath+FILENAME1);
 
             if(!file.exists()) {
-                String sensorNameList = "Time, Acc_x, Acc_y, Acc_z, Gyro_x, Gyro_y, Gyro_z";
-                String gpsNameList = "Time, Latitude, Longitude";
-                String selfreportNameList = "Time, Transportation Mode, Status";
+                String sensorNameList = "Time,Acc_x,Acc_y,Acc_z,Gyro_x,Gyro_y,Gyro_z";
+                String gpsNameList = "Time,Latitude,Longitude";
+                String selfreportNameList = "Time,Transportation_Mode,Status";
                 FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
                 FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
                 FileHelper.saveToFile(dataPath, selfreportNameList, FILENAME3);
