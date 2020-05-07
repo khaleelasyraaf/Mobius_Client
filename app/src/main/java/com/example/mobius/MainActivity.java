@@ -313,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 //        Toast.makeText(MainActivity.this, mode + " " + isChecked, Toast.LENGTH_SHORT).show();
         Log.d("Transport Mode", mode + " " + isChecked);
-        String walkData = dateToStr + ", " + mode + ", " + isChecked;
+        String walkData = dateToStr + "," + mode + "," + isChecked;
         FileHelper.saveToFile(dataPath, walkData, FILENAME3);
         saveSelfReportSwitches();
     }
