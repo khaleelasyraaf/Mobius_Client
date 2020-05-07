@@ -2,7 +2,6 @@ package com.example.mobius;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -24,22 +23,18 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-import android.os.PowerManager;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Objects;
 
 import static android.hardware.SensorManager.SENSOR_DELAY_GAME;
 
@@ -81,9 +76,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     boolean IsDataRequested = false;
 
-    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    SimpleDateFormat formatSensors = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    SimpleDateFormat formatFiles = new SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss-SSS");
+
     Date today = new Date();
-    String currentDatetime = format.format(today);
+    String currentDatetimeFiles = formatFiles.format(today);
 
     String FILENAME1;
     String FILENAME2;
@@ -193,9 +190,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, wakeLockTag);
 
-        FILENAME1 = currentDatetime + "_sensors.csv";
-        FILENAME2 = currentDatetime + "_gps.csv";
-        FILENAME3 = currentDatetime + "_selfreport.csv";
+        FILENAME1 = currentDatetimeFiles + "_sensors.csv";
+        FILENAME2 = currentDatetimeFiles + "_gps.csv";
+        FILENAME3 = currentDatetimeFiles + "_selfreport.csv";
 
         isIDgiven = false;
 
@@ -260,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void changeSliders(boolean isChecked, String mode){
         Date today = new Date();
-        String dateToStr = format.format(today);
+        String dateToStr = formatSensors.format(today);
 
         if (isChecked)
         {
@@ -509,7 +506,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float Gyro_Z = v.values[2];
 
         Date today = new Date();
-        String dateToStr = format.format(today);
+        String dateToStr = formatSensors.format(today);
 
         String sensorData = dateToStr+","+Acc_X+","+Acc_Y+","+Acc_Z+","+Gyro_X+","+Gyro_Y+","+Gyro_Z;
         FileHelper.saveToFile(dataPath, sensorData, FILENAME1);
@@ -520,7 +517,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         final double longitude = mLocation.getLongitude();
 
         Date today = new Date();
-        String dateToStr = format.format(today);
+        String dateToStr = formatSensors.format(today);
 
         String gpsData = dateToStr+","+latitude+","+longitude;
         FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
@@ -654,10 +651,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String zipName = "ID_" + myTextID.getText().toString() + "_" + currentDatetime + ".zip";
+                        String zipName = "ID_" + myTextID.getText().toString() + "_" + currentDatetimeFiles + ".zip";
                         if (FileHelper.zip(dataPath, zipPath, zipName, filesZipped)){
                             // TODO DONT REMEMBER TO ACTIVATE THIS AGAIN
-//                          new FileSender().execute(zipPath, zipName, myTextID.getText().toString());
+                            new FileSender().execute(zipPath, zipName, myTextID.getText().toString());
                             // delete Files in data Folder (they just got zipped)
                             java.io.File files = new java.io.File(dataPath);
                             java.io.File[] fileList = files.listFiles();
