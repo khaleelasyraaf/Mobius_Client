@@ -219,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 wakeLock.acquire();
                 saveToggle();
 
+                myAddIdBtn.setEnabled(false);
                 myUploadBtn.setEnabled(false);
             }
             else
@@ -237,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             public void onClick(DialogInterface dialog, int which) {
                                 stopEverything();
                                 saveToggle();
+                                myAddIdBtn.setEnabled(true);
                                 myUploadBtn.setEnabled(true);
                             }
                         });
@@ -244,6 +246,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         myStartStopToggle.setChecked(true);
+                        myAddIdBtn.setEnabled(false);
                         myUploadBtn.setEnabled(false);
                     }
                 });
@@ -272,6 +275,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             busIcon.setColorFilter(Color.argb(150,200,200,200));
             carIcon.setColorFilter(Color.argb(150,200,200,200));
             walkIcon.setColorFilter(Color.argb(150,200,200,200));
+
+            myStartStopToggle.setEnabled(false);
         }
         else
         {
@@ -287,6 +292,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             carIcon.clearColorFilter();
             walkIcon.clearColorFilter();
 
+            myStartStopToggle.setEnabled(true);
         }
         // Change only the one that was selected back on
         if (isChecked){
