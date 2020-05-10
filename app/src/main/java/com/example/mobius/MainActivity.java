@@ -2,7 +2,9 @@ package com.example.mobius;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -219,7 +221,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 wakeLock.acquire();
                 saveToggle();
 
-                myAddIdBtn.setEnabled(false);
                 myUploadBtn.setEnabled(false);
             }
             else
@@ -238,7 +239,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             public void onClick(DialogInterface dialog, int which) {
                                 stopEverything();
                                 saveToggle();
-                                myAddIdBtn.setEnabled(true);
                                 myUploadBtn.setEnabled(true);
                             }
                         });
@@ -246,7 +246,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         myStartStopToggle.setChecked(true);
-                        myAddIdBtn.setEnabled(false);
                         myUploadBtn.setEnabled(false);
                     }
                 });
@@ -556,9 +555,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             switchTrainBus.setEnabled(true);
             switchCar.setEnabled(true);
 
+            myAddIdBtn.setEnabled(false);
+
             startService();
             startSensors();
             startGPS();
+
+            startAlarm();
 
             startChronometer();
 
@@ -587,10 +590,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void stopEverything() {
+
+        myAddIdBtn.setEnabled(true);
+
         stopService();
         IsDataRequested = false;
         SM.unregisterListener(MainActivity.this);
         stopGPS();
+
+        stopAlarm();
 
         pauseChronometer();
 
@@ -684,5 +692,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    private void startAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent (this, AlertReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0);
+
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 5*60*1000, 2*60*60*1000, pendingIntent);
+    }
+
+    private void stopAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent (this, AlertReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0);
+
+        alarmManager.cancel(pendingIntent);
     }
 }
