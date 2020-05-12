@@ -180,4 +180,14 @@
         android:onClick="uploadFiles"
         android:text="Upload" />
 
+    <CheckBox
+        android:id="@+id/gpsCheckbox"
+        android:layout_width="68dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="31dp"
+        android:layout_marginTop="412dp"
+        android:text="GPS" />
+
 </RelativeLayout>

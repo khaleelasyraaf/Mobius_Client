@@ -26,6 +26,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // UI controls
     private Button myAddIdBtn, myUploadBtn;
     private ToggleButton myStartStopToggle;
+    private CheckBox myGPSCheckBox;
 
     private TextView myTextID;
 
@@ -142,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myStartStopToggle = (ToggleButton)findViewById(R.id.toggleStartStopBtn);
         myAddIdBtn = (Button) findViewById(R.id.buttonAddID);
         myUploadBtn = (Button) findViewById(R.id.buttonUpload);
+        myGPSCheckBox = (CheckBox) findViewById(R.id.gpsCheckbox);
 
         myTextID = (TextView) findViewById(R.id.textID);
 
@@ -189,6 +192,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
         //endregion
 
+        myGPSCheckBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (myGPSCheckBox.isChecked()) {
+                    startGPS();
+                }
+                else {
+                    stopGPS();
+                }
+            }
+        });
+
         final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, wakeLockTag);
 
@@ -199,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         isIDgiven = false;
 
         myUploadBtn.setEnabled(false);
+        myGPSCheckBox.setEnabled(false);
 
         switchWalk.setEnabled(false);
         switchBike.setEnabled(false);
@@ -238,7 +254,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 stopEverything();
+                                stopGPS();
                                 saveToggle();
+                                myGPSCheckBox.setEnabled(false);
+                                myGPSCheckBox.setChecked(false);
                                 myUploadBtn.setEnabled(true);
                             }
                         });
@@ -246,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         myStartStopToggle.setChecked(true);
+                        myGPSCheckBox.setEnabled(true);
                         myUploadBtn.setEnabled(false);
                     }
                 });
@@ -255,7 +275,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         }
     };
-
 
     private void changeSliders(boolean isChecked, String mode){
         Date today = new Date();
@@ -550,6 +569,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             IsDataRequested = true;
 
+            myGPSCheckBox.setEnabled(true);
+
             switchWalk.setEnabled(true);
             switchBike.setEnabled(true);
             switchTrainBus.setEnabled(true);
@@ -559,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             startService();
             startSensors();
-            startGPS();
+            //startGPS();
 
             startAlarm();
 
@@ -596,12 +617,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopService();
         IsDataRequested = false;
         SM.unregisterListener(MainActivity.this);
-        stopGPS();
+        stopSensors();
+        //stopGPS();
 
         stopAlarm();
-
         pauseChronometer();
-
         Log.d("Sensors", "Sensors stopped");
     }
 
