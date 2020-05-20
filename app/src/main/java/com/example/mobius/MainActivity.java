@@ -51,12 +51,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private TextView myTextID;
 
-    private Switch switchWalk, switchBike, switchTrainBus, switchCar;
-    private ImageView walkIcon, bikeIcon, trainIcon, busIcon, carIcon;
+    private Switch switchWalk, switchRun, switchBike, switchTrainBus, switchCar;
+    private ImageView walkIcon, runIcon, bikeIcon, trainIcon, busIcon, carIcon;
 
     public static final String SHARED_PREFS = "sharedPrefs";
 
     public static final String SWITCH_WALK = "switchWalk";
+    public static final String SWITCH_RUN = "switchRun";
     public static final String SWITCH_BIKE = "switchBike";
     public static final String SWITCH_TRAIN_BUS = "switchTrainBus";
     public static final String SWITCH_CAR = "switchCar";
@@ -75,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SimpleLocation mLocation;
 
-    private Boolean switchWalkOnOff, switchBikeOnOff, switchTrainBusOnOff, switchCarOnOff,
+    private Boolean switchWalkOnOff, switchRunOnOff, switchBikeOnOff, switchTrainBusOnOff, switchCarOnOff,
             toggleStartStopOnOff;
 
     boolean IsDataRequested = false;
@@ -149,11 +150,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myTextID = (TextView) findViewById(R.id.textID);
 
         switchWalk = (Switch)findViewById(R.id.switchButtonWalk);
+        switchRun = (Switch)findViewById(R.id.switchButtonRun);
         switchBike = (Switch)findViewById(R.id.switchButtonBike);
         switchTrainBus = (Switch)findViewById(R.id.switchButtonTrainBus);
         switchCar = (Switch)findViewById(R.id.switchButtonCar);
 
         walkIcon = (ImageView)findViewById(R.id.walkIcon);
+        runIcon = (ImageView)findViewById(R.id.runIcon);
         bikeIcon = (ImageView)findViewById(R.id.bikeIcon);
         trainIcon = (ImageView)findViewById(R.id.trainIcon);
         busIcon = (ImageView)findViewById(R.id.busIcon);
@@ -170,6 +173,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 changeSliders(isChecked, "Walking");
+            }
+        });
+        switchRun.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                changeSliders(isChecked, "Running");
             }
         });
         switchBike.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -217,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myGPSCheckBox.setEnabled(false);
 
         switchWalk.setEnabled(false);
+        switchRun.setEnabled(false);
         switchBike.setEnabled(false);
         switchTrainBus.setEnabled(false);
         switchCar.setEnabled(false);
@@ -283,32 +293,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (isChecked)
         {
             // Disable all sliders
+            switchWalk.setEnabled(false);
+            switchRun.setEnabled(false);
             switchBike.setEnabled(false);
             switchTrainBus.setEnabled(false);
             switchCar.setEnabled(false);
-            switchWalk.setEnabled(false);
             // Grey Icons out
+            walkIcon.setColorFilter(Color.argb(150,200,200,200));
+            runIcon.setColorFilter(Color.argb(150,200,200,200));
             bikeIcon.setColorFilter(Color.argb(150,200,200,200));
             trainIcon.setColorFilter(Color.argb(150,200,200,200));
             busIcon.setColorFilter(Color.argb(150,200,200,200));
             carIcon.setColorFilter(Color.argb(150,200,200,200));
-            walkIcon.setColorFilter(Color.argb(150,200,200,200));
 
             myStartStopToggle.setEnabled(false);
         }
         else
         {
             // Enable the sliders
+            switchWalk.setEnabled(true);
+            switchRun.setEnabled(true);
             switchBike.setEnabled(true);
             switchTrainBus.setEnabled(true);
             switchCar.setEnabled(true);
-            switchWalk.setEnabled(true);
             // Colorize icons
+            walkIcon.clearColorFilter();
+            runIcon.clearColorFilter();
             bikeIcon.clearColorFilter();
             trainIcon.clearColorFilter();
             busIcon.clearColorFilter();
             carIcon.clearColorFilter();
-            walkIcon.clearColorFilter();
 
             myStartStopToggle.setEnabled(true);
         }
@@ -319,18 +333,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     switchWalk.setEnabled(true);
                     walkIcon.clearColorFilter();
                     break;
+                case "Running":
+                    switchRun.setEnabled(true);
+                    runIcon.clearColorFilter();
+                    break;
                 case "Biking":
                     switchBike.setEnabled(true);
                     bikeIcon.clearColorFilter();
-                    break;
-                case "Car":
-                    switchCar.setEnabled(true);
-                    carIcon.clearColorFilter();
                     break;
                 case "Train/Bus":
                     switchTrainBus.setEnabled(true);
                     busIcon.clearColorFilter();
                     trainIcon.clearColorFilter();
+                    break;
+                case "Car":
+                    switchCar.setEnabled(true);
+                    carIcon.clearColorFilter();
                     break;
             }
         }
@@ -396,6 +414,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putBoolean(SWITCH_WALK, switchWalk.isChecked());
+        editor.putBoolean(SWITCH_RUN, switchRun.isChecked());
         editor.putBoolean(SWITCH_BIKE, switchBike.isChecked());
         editor.putBoolean(SWITCH_TRAIN_BUS, switchTrainBus.isChecked());
         editor.putBoolean(SWITCH_CAR, switchCar.isChecked());
@@ -407,6 +426,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
 
         switchWalkOnOff = sharedPreferences.getBoolean(SWITCH_WALK, false);
+        switchRunOnOff = sharedPreferences.getBoolean(SWITCH_RUN, false);
         switchBikeOnOff = sharedPreferences.getBoolean(SWITCH_BIKE, false);
         switchTrainBusOnOff = sharedPreferences.getBoolean(SWITCH_TRAIN_BUS, false);
         switchCarOnOff = sharedPreferences.getBoolean(SWITCH_CAR, false);
@@ -430,6 +450,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void updateViews() {
         switchWalk.setChecked(switchWalkOnOff);
+        switchRun.setChecked(switchRunOnOff);
         switchBike.setChecked(switchBikeOnOff);
         switchTrainBus.setChecked(switchTrainBusOnOff);
         switchCar.setChecked(switchCarOnOff);
@@ -498,10 +519,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void startGPS() {
         mGPSRunnable.run();
+        //mLocation.beginUpdates();
     }
 
     public void stopGPS() {
         mHandler.removeCallbacks(mGPSRunnable);
+        //mLocation.endUpdates();
     }
 
     private final Runnable mSensorsRunnable = new Runnable() {
@@ -572,6 +595,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             myGPSCheckBox.setEnabled(true);
 
             switchWalk.setEnabled(true);
+            switchRun.setEnabled(true);
             switchBike.setEnabled(true);
             switchTrainBus.setEnabled(true);
             switchCar.setEnabled(true);
