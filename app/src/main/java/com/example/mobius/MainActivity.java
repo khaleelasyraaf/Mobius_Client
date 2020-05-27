@@ -118,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 123);
+            return;
         }
 //        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 123);
 
@@ -131,8 +132,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Gyroscope sensor
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-        mLocation = new SimpleLocation(this);
-        mLocation.setBlurRadius(5);
+        mLocation = new SimpleLocation(this, true, false, 5000, true);
+        //mLocation.setBlurRadius(5);
+
+        mLocation.setListener(new SimpleLocation.Listener() {
+            public void onPositionChanged() {
+                Log.d("Location", "There are changes");
+                // new location data has been received and can be accessed
+            }
+        });
 
         if (!mLocation.hasLocationEnabled()) {
             // ask the user to enable location access
@@ -519,12 +527,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void startGPS() {
         mGPSRunnable.run();
-        //mLocation.beginUpdates();
+        mLocation.beginUpdates();
     }
 
     public void stopGPS() {
         mHandler.removeCallbacks(mGPSRunnable);
-        //mLocation.endUpdates();
+        mLocation.endUpdates();
     }
 
     private final Runnable mSensorsRunnable = new Runnable() {
