@@ -137,7 +137,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         mLocation.setListener(new SimpleLocation.Listener() {
             public void onPositionChanged() {
-                Log.d("Location", "There are changes");
+                if (myGPSCheckBox.isChecked()) {
+                    saveGPSData();
+                    Log.d("Location", "There are changes");
+                }
                 // new location data has been received and can be accessed
             }
         });
@@ -521,7 +524,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
 
             mHandler.postDelayed(this, 10000);
-            saveGPSData();
+            //saveGPSData();
         }
     };
 
