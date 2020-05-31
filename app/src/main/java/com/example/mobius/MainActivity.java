@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Gyroscope sensor
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-        mLocation = new SimpleLocation(this, true, false, 5000, true);
+        mLocation = new SimpleLocation(this, true, false, 10000, true);
         //mLocation.setBlurRadius(5);
 
         mLocation.setListener(new SimpleLocation.Listener() {
@@ -140,8 +140,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (myGPSCheckBox.isChecked()) {
                     saveGPSData();
                     Log.d("Location", "There are changes");
+                    // new location data has been received and can be accessed
                 }
-                // new location data has been received and can be accessed
             }
         });
 
@@ -520,8 +520,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         public void run() {
             final double latitude = mLocation.getLatitude();
             final double longitude = mLocation.getLongitude();
+            final double speed = mLocation.getSpeed();
             //Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude" + longitude, Toast.LENGTH_SHORT).show();
-            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude);
+            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude + " Speed: " + speed);
 
             mHandler.postDelayed(this, 10000);
             //saveGPSData();
@@ -573,11 +574,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void saveGPSData() {
         final double latitude = mLocation.getLatitude();
         final double longitude = mLocation.getLongitude();
+        final double speed_ms = mLocation.getSpeed();
+        final double speed_kmh = (mLocation.getSpeed()*3600)/1000;
 
         Date today = new Date();
         String dateToStr = formatSensors.format(today);
 
-        String gpsData = dateToStr+","+latitude+","+longitude;
+        String gpsData = dateToStr+","+latitude+","+longitude+","+speed_ms+","+speed_kmh;
         FileHelper.saveToFile(dataPath, gpsData, FILENAME2);
     }
 
@@ -590,7 +593,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             if(!file.exists()) {
                 String sensorNameList = "Time,Acc_x,Acc_y,Acc_z,Gyro_x,Gyro_y,Gyro_z";
-                String gpsNameList = "Time,Latitude,Longitude";
+                String gpsNameList = "Time,Latitude,Longitude,Speed(m/s),Speed(km/h)";
                 String selfreportNameList = "Time,Transportation_Mode,Status";
                 FileHelper.saveToFile(dataPath, sensorNameList, FILENAME1);
                 FileHelper.saveToFile(dataPath, gpsNameList, FILENAME2);
