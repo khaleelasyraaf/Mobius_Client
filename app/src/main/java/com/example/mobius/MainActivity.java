@@ -242,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             v.vibrate(pattern, 0);
                             tooFastDialog();
                         }
-                        else if (speedKmH < 7.20) {
+                        else if (speedKmH < 7.20 ) {
                             v.vibrate(pattern, 0);
                             tooSlowDialog();
                         }
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             v.vibrate(pattern, 0);
                             tooFastDialog();
                         }
-                        else if (speedKmH < 7.20) {
+                        else if (speedKmH < 7.20 && speedKmH != 0) {
                             v.vibrate(pattern, 0);
                             tooSlowDialog();
                         }
@@ -273,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         }
                     }
                     else if (switchCar.isChecked()) {
-                        if (speedKmH < 20.00 && speedKmH != 0){
+                        if (speedKmH < 7.20 && speedKmH != 0){
                             v.vibrate(pattern, 0);
                             tooSlowDialog();
                         }
