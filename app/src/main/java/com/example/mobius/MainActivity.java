@@ -20,7 +20,9 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.os.Vibrator;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -92,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     String FILENAME3;
 
     boolean isIDgiven;
+    boolean dialogShown;
 
     boolean filesZipped = false;
 
@@ -131,24 +134,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         myAccelerometer = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         // Gyroscope sensor
         myGyroscope = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-        mLocation = new SimpleLocation(this, true, false, 10000, true);
-        //mLocation.setBlurRadius(5);
-
-        mLocation.setListener(new SimpleLocation.Listener() {
-            public void onPositionChanged() {
-                if (myGPSCheckBox.isChecked()) {
-                    saveGPSData();
-                    Log.d("Location", "There are changes");
-                    // new location data has been received and can be accessed
-                }
-            }
-        });
-
-        if (!mLocation.hasLocationEnabled()) {
-            // ask the user to enable location access
-            SimpleLocation.openSettings(this);
-        }
 
         //region Widgets
 
@@ -224,6 +209,85 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
+        mLocation = new SimpleLocation(this, true, false, 10000, true);
+        //mLocation.setBlurRadius(5);
+
+        if (!mLocation.hasLocationEnabled()) {
+            // ask the user to enable location access
+            SimpleLocation.openSettings(this);
+        }
+
+        // New location data received and can be accessed
+        mLocation.setListener(new SimpleLocation.Listener() {
+            public void onPositionChanged() {
+                final double speedKmH = (mLocation.getSpeed()*3600)/1000;
+                final long[] pattern = {0, 100, 1000, 200, 1000};
+                final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
+
+                if (myGPSCheckBox.isChecked()) {
+                    saveGPSData();
+                    Log.d("Location", "There are changes");
+
+                    if (switchWalk.isChecked()) {
+                        if (speedKmH > 7.20){
+                            v.vibrate(pattern, 0);
+                            tooFastDialog();
+                        }
+                        else {
+                            v.cancel();
+                        }
+                    }
+                    else if (switchRun.isChecked()) {
+                        if (speedKmH > 15.00){
+                            v.vibrate(pattern, 0);
+                            tooFastDialog();
+                        }
+                        else if (speedKmH < 7.20) {
+                            v.vibrate(pattern, 0);
+                            tooSlowDialog();
+                        }
+                        else {
+                            v.cancel();
+                        }
+                    }
+                    else if (switchBike.isChecked()) {
+                        if (speedKmH > 30.00){
+                            v.vibrate(pattern, 0);
+                            tooFastDialog();
+                        }
+                        else if (speedKmH < 7.20) {
+                            v.vibrate(pattern, 0);
+                            tooSlowDialog();
+                        }
+                        else {
+                            v.cancel();
+                        }
+                    }
+                    else if (switchTrainBus.isChecked()) {
+                        if (speedKmH < 7.20 && speedKmH != 0) {
+                            v.vibrate(pattern, 0);
+                            tooSlowDialog();
+                        }
+                        else {
+                            v.cancel();
+                        }
+                    }
+                    else if (switchCar.isChecked()) {
+                        if (speedKmH < 20.00 && speedKmH != 0){
+                            v.vibrate(pattern, 0);
+                            tooSlowDialog();
+                        }
+                        else {
+                            v.cancel();
+                        }
+                    }
+                    else {
+                        chooseTransportationDialog();
+                    }
+                }
+            }
+        });
+
         final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, wakeLockTag);
 
@@ -280,6 +344,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                                 myGPSCheckBox.setEnabled(false);
                                 myGPSCheckBox.setChecked(false);
                                 myUploadBtn.setEnabled(true);
+
+                                switchWalk.setEnabled(false);
+                                switchRun.setEnabled(false);
+                                switchBike.setEnabled(false);
+                                switchTrainBus.setEnabled(false);
+                                switchCar.setEnabled(false);
                             }
                         });
                 builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -300,6 +370,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void changeSliders(boolean isChecked, String mode){
         Date today = new Date();
         String dateToStr = formatSensors.format(today);
+
+        final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
 
         if (isChecked)
         {
@@ -336,6 +408,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             carIcon.clearColorFilter();
 
             myStartStopToggle.setEnabled(true);
+            v.cancel();
         }
         // Change only the one that was selected back on
         if (isChecked){
@@ -543,7 +616,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         @Override
         public void run() {
             IsDataRequested = true;
-            mHandler.postDelayed(this, 17);
+            mHandler.postDelayed(this, 5000);
         }
     };
 
@@ -766,5 +839,78 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0);
 
         alarmManager.cancel(pendingIntent);
+    }
+
+    private void chooseTransportationDialog() {
+        final long[] pattern = {0, 100, 1000, 200, 1000};
+        final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
+
+        if (dialogShown) {
+        }
+        else {
+            v.vibrate(pattern, 0);
+            dialogShown = true;
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setCancelable(false);
+            builder.setMessage("Please select a Transportation Mode.");
+            builder.setPositiveButton("Ok",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            v.cancel();
+                            dialogShown = false;
+                        }
+                    });
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
+    }
+
+    private void tooFastDialog() {
+        if (dialogShown) {
+        }
+        else {
+            dialogShown = true;
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setCancelable(false);
+            builder.setTitle("Too Fast!");
+            builder.setMessage("It seems that you're moving too fast. Please change the transportation mode if you haven't.");
+            builder.setPositiveButton("Ok",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialogShown = false;
+                        }
+                    });
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
+    }
+
+    private void tooSlowDialog() {
+        if (dialogShown) {
+        }
+        else {
+            dialogShown = true;
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setCancelable(false);
+            builder.setTitle("Too Slow!");
+            builder.setMessage("It seems that you're moving too slow. Please change the transportation mode if you haven't.");
+            builder.setPositiveButton("Ok",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialogShown = false;
+                        }
+                    });
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
     }
 }
