@@ -220,70 +220,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // New location data received and can be accessed
         mLocation.setListener(new SimpleLocation.Listener() {
             public void onPositionChanged() {
+                final double latitude = mLocation.getLatitude();
+                final double longitude = mLocation.getLongitude();
                 final double speedKmH = (mLocation.getSpeed()*3600)/1000;
-                final long[] pattern = {0, 100, 1000, 200, 1000};
-                final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
 
                 if (myGPSCheckBox.isChecked()) {
                     saveGPSData();
-                    Log.d("Location", "There are changes");
-
-                    if (switchWalk.isChecked()) {
-                        if (speedKmH > 7.20){
-                            v.vibrate(pattern, 0);
-                            tooFastDialog();
-                        }
-                        else {
-                            v.cancel();
-                        }
-                    }
-                    else if (switchRun.isChecked()) {
-                        if (speedKmH > 15.00){
-                            v.vibrate(pattern, 0);
-                            tooFastDialog();
-                        }
-                        else if (speedKmH < 7.20 ) {
-                            v.vibrate(pattern, 0);
-                            tooSlowDialog();
-                        }
-                        else {
-                            v.cancel();
-                        }
-                    }
-                    else if (switchBike.isChecked()) {
-                        if (speedKmH > 30.00){
-                            v.vibrate(pattern, 0);
-                            tooFastDialog();
-                        }
-                        else if (speedKmH < 7.20 && speedKmH != 0) {
-                            v.vibrate(pattern, 0);
-                            tooSlowDialog();
-                        }
-                        else {
-                            v.cancel();
-                        }
-                    }
-                    else if (switchTrainBus.isChecked()) {
-                        if (speedKmH < 7.20 && speedKmH != 0) {
-                            v.vibrate(pattern, 0);
-                            tooSlowDialog();
-                        }
-                        else {
-                            v.cancel();
-                        }
-                    }
-                    else if (switchCar.isChecked()) {
-                        if (speedKmH < 7.20 && speedKmH != 0){
-                            v.vibrate(pattern, 0);
-                            tooSlowDialog();
-                        }
-                        else {
-                            v.cancel();
-                        }
-                    }
-                    else {
-                        chooseTransportationDialog();
-                    }
+                    Log.d("GPS", "Lat: " + latitude + " Long: " + longitude + " Speed(km/h): " + speedKmH);
                 }
             }
         });
@@ -591,14 +534,76 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Runnable mGPSRunnable = new Runnable() {
         @Override
         public void run() {
+            // Notify when user is too fast or too slow
             final double latitude = mLocation.getLatitude();
             final double longitude = mLocation.getLongitude();
-            //final double speedMS = mLocation.getSpeed();
             final double speedKmH = (mLocation.getSpeed()*3600)/1000;
-            Log.d("GPS", "Lat: " + latitude + " Long: " + longitude + " Speed(km/h): " + speedKmH);
 
-            mHandler.postDelayed(this, 10000);
-            //saveGPSData();
+            final long[] pattern = {0, 200, 500, 200};
+            final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
+
+            mHandler.postDelayed(this, 30000);
+
+            if (myGPSCheckBox.isChecked()) {
+                //saveGPSData();
+
+                if (switchWalk.isChecked()) {
+                    if (speedKmH > 7.20){
+                        v.vibrate(pattern, -1);
+                        tooFastDialog();
+                    }
+                    else {
+                        v.cancel();
+                    }
+                }
+                else if (switchRun.isChecked()) {
+                    if (speedKmH > 20.00){
+                        v.vibrate(pattern, -1);
+                        tooFastDialog();
+                    }
+                        else if (speedKmH < 7.20 ) {
+                            v.vibrate(pattern, -1);
+                            tooSlowDialog();
+                        }
+                    else {
+                        v.cancel();
+                    }
+                }
+                else if (switchBike.isChecked()) {
+                    if (speedKmH > 30.00){
+                        v.vibrate(pattern, -1);
+                        tooFastDialog();
+                    }
+                        else if (speedKmH < 7.20 && speedKmH != 0) {
+                            v.vibrate(pattern, -1);
+                            tooSlowDialog();
+                        }
+                    else {
+                        v.cancel();
+                    }
+                }
+                else if (switchTrainBus.isChecked()) {
+                    if (speedKmH < 7.20 && speedKmH != 0) {
+                        v.vibrate(pattern, -1);
+                        tooSlowDialog();
+                    }
+                    else {
+                        v.cancel();
+                    }
+                }
+                else if (switchCar.isChecked()) {
+                    if (speedKmH < 7.20){
+                        v.vibrate(pattern, -1);
+                        tooSlowDialog();
+                    }
+                    else {
+                        v.cancel();
+                    }
+                }
+                else if (speedKmH >= 0) {
+                    chooseTransportationDialog();
+                }
+            }
         }
     };
 
@@ -616,7 +621,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         @Override
         public void run() {
             IsDataRequested = true;
-            mHandler.postDelayed(this, 5000);
+            mHandler.postDelayed(this, 17);
         }
     };
 
@@ -842,13 +847,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void chooseTransportationDialog() {
-        final long[] pattern = {0, 100, 1000, 200, 1000};
+        final long[] pattern = {0, 100};
         final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
 
         if (dialogShown) {
         }
         else {
-            v.vibrate(pattern, 0);
+            v.vibrate(pattern, -1);
             dialogShown = true;
 
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
