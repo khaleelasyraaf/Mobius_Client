@@ -94,7 +94,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     String FILENAME3;
 
     boolean isIDgiven;
-    boolean dialogShown;
 
     boolean filesZipped = false;
 
@@ -539,7 +538,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             final double longitude = mLocation.getLongitude();
             final double speedKmH = (mLocation.getSpeed()*3600)/1000;
 
-            final long[] pattern = {0, 200, 500, 200};
+            final long[] pattern1 = {0, 200, 500, 200};
+            final long[] pattern2 = {0, 100};
             final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
 
             mHandler.postDelayed(this, 30000);
@@ -549,8 +549,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 if (switchWalk.isChecked()) {
                     if (speedKmH > 7.20){
-                        v.vibrate(pattern, -1);
-                        tooFastDialog();
+                        v.vibrate(pattern1, -1);
+                        Toast.makeText(MainActivity.this, "You're moving too fast!", Toast.LENGTH_LONG).show();
                     }
                     else {
                         v.cancel();
@@ -558,12 +558,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 else if (switchRun.isChecked()) {
                     if (speedKmH > 20.00){
-                        v.vibrate(pattern, -1);
-                        tooFastDialog();
+                        v.vibrate(pattern1, -1);
+                        Toast.makeText(MainActivity.this, "You're moving too fast!", Toast.LENGTH_LONG).show();
                     }
                         else if (speedKmH < 7.20 ) {
-                            v.vibrate(pattern, -1);
-                            tooSlowDialog();
+                            v.vibrate(pattern1, -1);
+                            Toast.makeText(MainActivity.this, "You're moving too slow!", Toast.LENGTH_LONG).show();
                         }
                     else {
                         v.cancel();
@@ -571,12 +571,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 else if (switchBike.isChecked()) {
                     if (speedKmH > 30.00){
-                        v.vibrate(pattern, -1);
-                        tooFastDialog();
+                        v.vibrate(pattern1, -1);
+                        Toast.makeText(MainActivity.this, "You're moving too fast!", Toast.LENGTH_LONG).show();
                     }
                         else if (speedKmH < 7.20 && speedKmH != 0) {
-                            v.vibrate(pattern, -1);
-                            tooSlowDialog();
+                            v.vibrate(pattern1, -1);
+                            Toast.makeText(MainActivity.this, "You're moving too slow!", Toast.LENGTH_LONG).show();
                         }
                     else {
                         v.cancel();
@@ -584,24 +584,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 else if (switchTrainBus.isChecked()) {
                     if (speedKmH < 7.20 && speedKmH != 0) {
-                        v.vibrate(pattern, -1);
-                        tooSlowDialog();
+                        v.vibrate(pattern1, -1);
+                        Toast.makeText(MainActivity.this, "You're moving too slow!", Toast.LENGTH_LONG).show();
                     }
                     else {
                         v.cancel();
                     }
                 }
                 else if (switchCar.isChecked()) {
-                    if (speedKmH < 7.20){
-                        v.vibrate(pattern, -1);
-                        tooSlowDialog();
+                        if (speedKmH < 30.00){
+                        v.vibrate(pattern1, -1);
+                        Toast.makeText(MainActivity.this, "You're moving too slow!", Toast.LENGTH_LONG).show();
                     }
                     else {
                         v.cancel();
                     }
                 }
                 else if (speedKmH >= 0) {
-                    chooseTransportationDialog();
+                    v.vibrate(pattern2, -1);
+                    Toast.makeText(MainActivity.this, "Choose a transportation mode.", Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -696,10 +697,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             startService();
             startSensors();
-            //startGPS();
-
             startAlarm();
-
             startChronometer();
 
             Log.d("Sensors", "Sensors Button Pressed");
@@ -734,7 +732,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         IsDataRequested = false;
         SM.unregisterListener(MainActivity.this);
         stopSensors();
-        //stopGPS();
 
         stopAlarm();
         pauseChronometer();
@@ -825,6 +822,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public void onClick(DialogInterface dialog, int which) {
                     }
                 });
+        builder.setNeutralButton("Delete files",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        java.io.File files = new java.io.File(dataPath);
+                        java.io.File[] fileList = files.listFiles();
+                        for (java.io.File file : fileList) {
+                            file.delete();
+                        }
+                        Log.d("Delete", "Data Files deleted");
+                        Toast.makeText(MainActivity.this, "Files deleted.", Toast.LENGTH_SHORT).show();
+                    }
+                });
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -844,78 +854,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0);
 
         alarmManager.cancel(pendingIntent);
-    }
-
-    private void chooseTransportationDialog() {
-        final long[] pattern = {0, 100};
-        final Vibrator v = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
-
-        if (dialogShown) {
-        }
-        else {
-            v.vibrate(pattern, -1);
-            dialogShown = true;
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setCancelable(false);
-            builder.setMessage("Please select a Transportation Mode.");
-            builder.setPositiveButton("Ok",
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            v.cancel();
-                            dialogShown = false;
-                        }
-                    });
-
-            AlertDialog dialog = builder.create();
-            dialog.show();
-        }
-    }
-
-    private void tooFastDialog() {
-        if (dialogShown) {
-        }
-        else {
-            dialogShown = true;
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setCancelable(false);
-            builder.setTitle("Too Fast!");
-            builder.setMessage("It seems that you're moving too fast. Please change the transportation mode if you haven't.");
-            builder.setPositiveButton("Ok",
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialogShown = false;
-                        }
-                    });
-
-            AlertDialog dialog = builder.create();
-            dialog.show();
-        }
-    }
-
-    private void tooSlowDialog() {
-        if (dialogShown) {
-        }
-        else {
-            dialogShown = true;
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setCancelable(false);
-            builder.setTitle("Too Slow!");
-            builder.setMessage("It seems that you're moving too slow. Please change the transportation mode if you haven't.");
-            builder.setPositiveButton("Ok",
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialogShown = false;
-                        }
-                    });
-
-            AlertDialog dialog = builder.create();
-            dialog.show();
-        }
     }
 }
