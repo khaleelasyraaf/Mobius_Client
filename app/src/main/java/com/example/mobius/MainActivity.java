@@ -833,6 +833,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         }
                         Log.d("Delete", "Data Files deleted");
                         Toast.makeText(MainActivity.this, "Files deleted.", Toast.LENGTH_SHORT).show();
+
+                        resetChronometer();
                     }
                 });
 
